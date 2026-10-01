@@ -1,0 +1,39 @@
+name: model-candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  train-and-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.lock
+      - run: pip install --no-deps -e .
+      - run: fraudguard download --output data/creditcard.csv
+      - run: fraudguard train --data data/creditcard.csv --output artifacts/candidate
+      - name: Automated release quality gates
+        run: |
+          python - <<'PY'
+          import json
+          from fraudguard.releases import check_release
+          _, _, gates = check_release('artifacts/candidate')
+          print(json.dumps(gates, indent=2))
+          if not gates['passed']:
+              raise SystemExit('Candidate failed release gates')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trusted-model-candidate
+          path: |
+            artifacts/candidate/manifest.json
+            artifacts/candidate/model.joblib
+            artifacts/candidate/evaluation.json
+          retention-days: 30
+# Artifact creation is automated. Staging and independent approval happen in the
+# controlled server registry; this workflow does not silently promote a model.

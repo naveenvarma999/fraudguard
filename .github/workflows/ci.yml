@@ -1,0 +1,48 @@
+name: validate
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.lock -r requirements-dev.txt
+      - run: pip install --no-deps -e .
+      - run: ruff check .
+      - run: pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/dashboard.test.mjs
+      - run: docker build -t fraudguard:test .
+      - name: Container readiness smoke test
+        run: |
+          docker run -d --name fraudguard -p 8000:8000 -e API_KEY=ci-only-key-not-for-production -e STATE_DIR=/data fraudguard:test
+          for i in $(seq 1 30); do
+            if curl --fail http://localhost:8000/health/ready; then break; fi
+            sleep 2
+          done
+          curl --fail http://localhost:8000/health/ready
+          curl --fail http://localhost:8000/ > /dev/null
+          curl --fail http://localhost:8000/assets/app.mjs > /dev/null
+          curl --fail http://localhost:8000/ui/demo > /dev/null
+      - name: Persistent workspace load gate
+        env:
+          API_KEY: ci-only-key-not-for-production
+        run: python scripts/benchmark_api.py --requests 50 --concurrency 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: operations-load-report
+          path: artifacts/operations/load_test.json
+      - name: Verify deployment contracts
+        run: docker exec fraudguard python -m fraudguard.deployment --expected-version 2.3.0
+      - name: Check Linux deployment script syntax
+        run: |
+          bash -n scripts/Deploy-Checked.sh
+          bash -n scripts/Export-Backup-S3.sh

@@ -1,0 +1,9 @@
+{
+  "version": "2.3.0",
+  "verified_utc": "2026-10-01T10:29:38.404689+00:00",
+  "python_tests": 81,
+  "javascript_tests": 7,
+  "browser": "Desktop and mobile: username guidance, authenticator enrollment, empty overview, invalid upload, saved results, detail review/label history, overview counts, interactive flow, deep links and memory-only sessions passed.",
+  "configuration": "Ruff, Compose including workers, Bash syntax passed.",
+  "aws": "2.2 confirmed deployed in user-supplied output. 2.3 not yet deployed."
+}

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#142922">
+  <title>FraudGuard — Transaction review workspace</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script type="module" src="/assets/app.mjs"></script>
+</head>
+<body>
+<svg class="svg-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4 5 8 8 9 3-1 8-5 8-9V6Z"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="chart" viewBox="0 0 24 24"><path d="M4 3v17h17M8 15v-4m5 4V7m5 8V4"/></symbol>
+  <symbol id="book" viewBox="0 0 24 24"><path d="M12 5C9 3 5 3 2 4v15c4-1 7-1 10 1 3-2 6-2 10-1V4c-3-1-7-1-10 1Zm0 0v15"/></symbol>
+  <symbol id="arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+  <symbol id="upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
+  <symbol id="download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></symbol>
+  <symbol id="key" viewBox="0 0 24 24"><circle cx="8" cy="8" r="5"/><path d="m12 12 9 9m-6-6 3-3m0 6 3-3"/></symbol>
+  <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></symbol>
+  <symbol id="code" viewBox="0 0 24 24"><path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18"/></symbol>
+</svg>
+<a class="skip-link" href="#main">Skip to workspace</a>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a href="/" class="brand"><span class="brand-mark"><svg><use href="#shield"/></svg></span><span>FraudGuard<span class="brand-sub">TRANSACTION INTELLIGENCE</span></span></a>
+    <div class="workspace-label">WORKSPACE <span>01</span></div>
+    <nav aria-label="Main navigation">
+      <button class="nav-item active" data-view="analyze" aria-current="page"><svg><use href="#grid"/></svg>Transaction review<span class="nav-dot"></span></button>
+      <button class="nav-item" data-view="report"><svg><use href="#chart"/></svg>Model performance</button>
+      <button class="nav-item" data-view="guide"><svg><use href="#book"/></svg>Getting started</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-note"><span class="mini-shield"><svg><use href="#shield"/></svg></span><h3>Built for a second look.</h3><p>Risk signals to help you decide what needs human review.</p></div>
+      <a class="api-link" href="/docs" target="_blank" rel="noopener"><svg><use href="#code"/></svg>API documentation<span>↗</span></a>
+      <div class="sidebar-footer"><span class="avatar">FG</span><div>Benchmark workspace<small>FraudGuard · v2.1</small></div></div>
+    </div>
+  </aside>
+  <div class="main-shell">
+    <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="page-label">Transaction review</strong></div><div class="top-actions"><a class="button button-outline small" href="/workspace">Team workspace ↗</a><span class="service-status" id="service-status"><i></i>Checking service</span><button class="button button-outline small" id="connect-button"><svg><use href="#key"/></svg>Connect workspace</button></div></header>
+    <main id="main">
+      <section class="view" id="view-analyze" aria-labelledby="analyze-title">
+        <div class="page-heading"><div><p class="eyebrow">SEE THE SIGNAL. MAKE THE CALL.</p><h1 id="analyze-title">Transaction review</h1><p class="page-description">Turn transaction data into a focused review queue.</p></div><button class="text-button" id="reset-button">Reset workspace ↺</button></div>
+        <div class="hero-card"><div><span class="hero-tag"><span></span> YOUR MODEL. A CLEARER WORKFLOW.</span><h2>A little more clarity.<br>A lot less guesswork.</h2><p>Analyze a batch, inspect the risk, and export your results.<br>Start with a sample—no setup needed.</p><button class="button hero-button" id="hero-demo">Explore the live demo <svg><use href="#arrow"/></svg></button></div><div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div><div class="art-shield"><svg><use href="#shield"/></svg></div><div class="art-card art-card-one"><span class="art-icon">✓</span><div>Pattern analyzed<span>Model-backed decisions</span></div></div><div class="art-card art-card-two"><span class="tiny-dot"></span>Human review, informed.</div></div></div>
+        <div class="stats-grid" aria-label="Current batch summary">
+          <article class="stat-card"><div><span>Transactions analyzed</span><svg><use href="#grid"/></svg></div><strong id="stat-total">—</strong><small id="stat-source">Your current batch</small></article>
+          <article class="stat-card"><div><span>Needs review</span><span class="stat-indicator amber"></span></div><strong id="stat-review">—</strong><small>Above the model threshold</small></article>
+          <article class="stat-card"><div><span>Pass</span><span class="stat-indicator green"></span></div><strong id="stat-pass">—</strong><small>Below the model threshold</small></article>
+          <article class="stat-card"><div><span>Review rate</span><svg><use href="#chart"/></svg></div><strong id="stat-rate">—</strong><small>Share of this batch flagged</small></article>
+        </div>
+        <div class="input-layout">
+          <section class="panel input-panel" aria-labelledby="input-title"><div class="panel-heading"><div class="number-label">01</div><div><h2 id="input-title">Add your transactions</h2><p>Choose where you want to start.</p></div><span class="soft-badge">Up to 100 rows</span></div>
+            <div class="input-tabs" role="tablist" aria-label="Input method"><button role="tab" aria-selected="true" aria-controls="input-demo" id="tab-demo" data-tab="demo" class="selected">Sample demo</button><button role="tab" aria-selected="false" aria-controls="input-upload" id="tab-upload" data-tab="upload" tabindex="-1">Upload file</button><button role="tab" aria-selected="false" aria-controls="input-json" id="tab-json" data-tab="json" tabindex="-1">Paste JSON</button></div>
+            <div id="input-demo" role="tabpanel" aria-labelledby="tab-demo" class="input-content"><div class="demo-preview"><div class="demo-icon"><svg><use href="#shield"/></svg></div><div><h3>A ready-to-review sample</h3><p>8 real, anonymized benchmark transactions.<br>Actual predictions from the loaded model.</p></div><span class="file-chip">DEMO</span></div><p class="fineprint">Curated examples show different outcomes. Their review rate does not represent real traffic.</p></div>
+            <div id="input-upload" role="tabpanel" aria-labelledby="tab-upload" class="input-content" hidden><label class="drop-zone" id="drop-zone" for="file-input"><span class="upload-icon"><svg><use href="#upload"/></svg></span><strong>Drop your transaction file here</strong><span>or <b>browse files</b> to get started</span><small>CSV or JSON · up to 256 KiB · 100 transactions</small><input id="file-input" type="file" accept=".csv,.json,text/csv,application/json"></label><div class="file-state" id="file-state" hidden></div><div class="download-links"><span>Need the right format?</span><a href="/assets/sample.csv" download="fraudguard-sample.csv">Download sample CSV ↗</a></div></div>
+            <div id="input-json" role="tabpanel" aria-labelledby="tab-json" class="input-content" hidden><div class="json-label"><label for="json-input">Transaction JSON</label><button class="text-button" id="paste-sample">Insert sample</button></div><textarea id="json-input" spellcheck="false" placeholder='{"transactions": [{"transaction_id": "TXN-001", "Amount": 125.50, "V1": …, "V28": …}]}' aria-describedby="json-help"></textarea><p id="json-help" class="fineprint">Accepts a transaction object, an array, or an object with a transactions array.</p></div>
+            <div class="inline-message" id="input-message" role="alert" hidden></div>
+            <div class="input-footer"><span id="input-footer-note"><svg><use href="#check"/></svg>No API key needed for the demo</span><button class="button button-primary" id="analyze-button">Run sample analysis <svg><use href="#arrow"/></svg></button></div>
+          </section>
+          <aside class="panel context-panel"><div class="context-icon"><svg><use href="#info"/></svg></div><p class="eyebrow">BEFORE YOU UPLOAD</p><h2>The right inputs.<br>Meaningful results.</h2><p>This model uses <strong>Amount and V1–V28</strong>: 28 anonymized features from the credit-card fraud benchmark.</p><div class="context-rule"></div><p>A card number, bank statement, or amount alone cannot be scored. Your own data must use the same feature definitions.</p><button class="text-button" data-view="guide">See the data guide <span>↗</span></button></aside>
+        </div>
+        <section class="panel results-panel" aria-labelledby="results-title"><div class="panel-heading"><div class="number-label">02</div><div><h2 id="results-title">Review your results</h2><p id="results-description">A clear decision for every transaction.</p></div><button class="button button-outline small" id="export-button" disabled><svg><use href="#download"/></svg>Export CSV</button></div>
+          <div class="results-toolbar" id="results-toolbar" hidden><div class="filter-group" role="group" aria-label="Filter decisions"><button class="selected" data-filter="all">All <span id="filter-all">0</span></button><button data-filter="review">Needs review <span id="filter-review">0</span></button><button data-filter="pass">Pass <span id="filter-pass">0</span></button></div><label class="search-box"><svg><use href="#search"/></svg><input id="result-search" type="search" placeholder="Find a transaction" aria-label="Search transaction ID"></label></div>
+          <div class="empty-state" id="empty-state"><div class="empty-icon"><svg><use href="#chart"/></svg></div><h3>Your next decision starts here.</h3><p>Run the sample or upload a batch to see<br>risk scores and review recommendations.</p></div>
+          <div class="table-wrap" id="results-table-wrap" hidden><table><thead><tr><th>Transaction</th><th>Amount</th><th><button id="sort-risk">Fraud probability ↓</button></th><th>Recommendation</th><th><span class="sr-only">Inspect transaction</span></th></tr></thead><tbody id="results-body"></tbody></table><div class="no-matches" id="no-matches" hidden>No transactions match this filter.</div></div>
+          <div class="results-footnote" id="results-footnote" hidden></div>
+        </section>
+        <footer class="workspace-footer"><span><svg><use href="#shield"/></svg>Decision support. Human judgment stays in control.</span><span>Files stay in this tab until you analyze them.</span></footer>
+      </section>
+      <section class="view" id="view-report" aria-labelledby="report-title" hidden><div class="page-heading"><div><p class="eyebrow">EVIDENCE BEHIND THE DECISIONS</p><h1 id="report-title">Model performance</h1><p class="page-description">Measured on later transactions the model did not train on.</p></div><span class="soft-badge">Offline benchmark</span></div><div id="report-content" aria-live="polite">Loading benchmark results…</div></section>
+      <section class="view" id="view-guide" aria-labelledby="guide-title" hidden><div class="page-heading"><div><p class="eyebrow">A SIMPLE PATH FROM DATA TO DECISION</p><h1 id="guide-title">Getting started</h1><p class="page-description">Everything you need for your first review.</p></div></div>
+        <div class="guide-grid"><article class="panel guide-card"><span class="step">01</span><h2>Try a real sample</h2><p>Run the public demo to analyze eight curated benchmark examples. No API key is needed. Predictions come from the loaded model; no transactions are invented.</p><button class="button button-primary" id="guide-demo">Try the demo <svg><use href="#arrow"/></svg></button></article><article class="panel guide-card"><span class="step">02</span><h2>Connect your workspace</h2><p>Use the API key created on your AWS server. The key stays in this page’s memory and is sent only to this service. Refreshing or disconnecting clears it.</p><button class="button button-outline" id="guide-connect">Connect securely <svg><use href="#key"/></svg></button></article><article class="panel guide-card"><span class="step">03</span><h2>Analyze and export</h2><p>Upload CSV or JSON, or paste JSON. Review the probabilities, filter flagged transactions, inspect inputs, and download a CSV of the full result batch.</p><a href="/assets/sample.csv" download="fraudguard-sample.csv">Get the sample CSV ↗</a></article></div>
+        <section class="panel guide-details"><h2>Your data checklist</h2><table><thead><tr><th>Field</th><th>What to provide</th></tr></thead><tbody><tr><td><code>Amount</code></td><td>A finite number from 0 to 1,000,000,000, in the benchmark’s amount units.</td></tr><tr><td><code>V1</code> through <code>V28</code></td><td>All 28 compatible anonymized numerical features, each between −10,000 and 10,000.</td></tr><tr><td><code>transaction_id</code></td><td>Optional for upload. Unique letters, numbers, hyphens, or underscores; up to 64 characters. Missing IDs are assigned by row.</td></tr><tr><td><code>Time</code> / <code>Class</code></td><td>Optional benchmark columns. They are discarded before scoring; labels never become model inputs.</td></tr></tbody></table><p>Maximum 100 transactions and 256 KiB per upload. CSV files must have a header row. JSON numerical values must be numbers, not quoted strings.</p></section>
+        <section class="guide-caution"><svg><use href="#info"/></svg><div><h3>What this application can—and cannot—tell you</h3><p>A risk score is an estimate, not proof of fraud. “Pass” means below the selected threshold, not guaranteed safe. The model was evaluated on an old, anonymized research benchmark. It cannot score a raw card number or ordinary bank export, and it has not been validated for live payment decisions. When workspace persistence is enabled, scores, transaction IDs, amounts and aggregate feature counts are retained for 90 days by default. Raw feature vectors are not stored. Review notes and audit events are retained.</p></div></section>
+      </section>
+    </main>
+  </div>
+</div>
+<dialog id="auth-dialog" aria-labelledby="auth-title"><form id="auth-form"><button class="dialog-close" type="button" id="auth-close" aria-label="Close connection dialog">×</button><div class="modal-icon"><svg><use href="#key"/></svg></div><p class="eyebrow">YOUR PRIVATE WORKSPACE</p><h2 id="auth-title">Connect to analyze your data.</h2><p>Enter your server’s API key. Public demo samples work without a connection.</p><label for="api-key">Workspace API key</label><input id="api-key" type="password" autocomplete="off" spellcheck="false" required minlength="16" placeholder="Paste your server API key"><p class="fineprint">Use the key from <code>~/fraudguard/.env</code> on AWS. It stays in memory for this tab and is never saved in browser storage.</p><div id="auth-message" class="inline-message" role="alert" hidden></div><button class="button button-primary full-width" id="auth-submit" type="submit">Connect workspace <svg><use href="#arrow"/></svg></button></form></dialog>
+<dialog id="detail-dialog" aria-labelledby="detail-title"><button class="dialog-close" type="button" id="detail-close" aria-label="Close transaction details">×</button><p class="eyebrow">TRANSACTION DETAIL</p><h2 id="detail-title"></h2><div id="detail-content"></div></dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

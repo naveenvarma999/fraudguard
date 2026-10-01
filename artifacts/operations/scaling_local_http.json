@@ -1,0 +1,23 @@
+{
+  "environment": "Windows local HTTP; one coordinator and two scoring worker processes; not AWS or Docker",
+  "requests": 20,
+  "transactions_per_request": 8,
+  "concurrency": 4,
+  "errors": 0,
+  "p95_ms": 488.91380001441576,
+  "requests_per_second": 17.67358687734346,
+  "workers": [
+    {
+      "worker": 1,
+      "in_flight": 0,
+      "completed": 10,
+      "circuit_open": false
+    },
+    {
+      "worker": 2,
+      "in_flight": 0,
+      "completed": 10,
+      "circuit_open": false
+    }
+  ]
+}

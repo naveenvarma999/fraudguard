@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {parseCSV,normalizeInput,resultsCSV} from '../src/fraudguard/static/data.mjs';
+const sample=JSON.parse(readFileSync(new URL('../src/fraudguard/static/sample.json',import.meta.url),'utf8'));
+test('CSV and JSON represent the same model inputs',()=>assert.deepEqual(normalizeInput(parseCSV(readFileSync(new URL('../src/fraudguard/static/sample.csv',import.meta.url),'utf8')),true),normalizeInput(sample)));
+test('CSV quotes, BOM, CRLF and escaped quotes',()=>assert.deepEqual(parseCSV('\uFEFFa,b\r\n"x,y","a""b"\r\n'),[{a:'x,y',b:'a"b'}]));
+test('Malformed CSV rejected',()=>{for(const s of ['a,a\n1,2','a,b\n1','a\n"x','a\n"x"bad'])assert.throws(()=>parseCSV(s));});
+test('Validation rejects invalid numbers, missing features, duplicates and unknown fields',()=>{for(const modify of [r=>delete r.V1,r=>r.V1='2',r=>r.Amount=-1,r=>r.V1=NaN,r=>r.V1=10001,r=>r.card_number='123',r=>r.transaction_id='<script>']){const row={...sample.transactions[0]};modify(row);assert.throws(()=>normalizeInput(row));}assert.throws(()=>normalizeInput([sample.transactions[0],sample.transactions[0]]));assert.throws(()=>normalizeInput([]));assert.throws(()=>normalizeInput(Array(101).fill(sample.transactions[0])));});
+test('Benchmark label and time are discarded; absent IDs generated',()=>{const row={...sample.transactions[0],Class:1,Time:100};delete row.transaction_id;const result=normalizeInput(row)[0];assert.equal(result.transaction_id,'ROW-001');assert.equal(result.Class,undefined);assert.equal(result.Time,undefined);});
+test('CSV blank numerical values rejected',()=>assert.throws(()=>normalizeInput({...sample.transactions[0],V1:''},true)));
+test('CSV export carries original amount, decision and model version',()=>{const row=sample.transactions[0];const csv=resultsCSV([row],{predictions:[{transaction_id:row.transaction_id,fraud_probability:.5,decision:'review'}],threshold:.2,model_version:'test'},'demo');assert.match(csv,/fraud_probability/);assert.match(csv,/"0.5","review","0.2","test","demo"/);});

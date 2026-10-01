@@ -1,0 +1,13 @@
+{
+  "requests": 200,
+  "concurrency": 4,
+  "seconds": 1.0578268999233842,
+  "requests_per_second": 189.06685017604062,
+  "latency_ms": {
+    "50": 20.63235000241548,
+    "95": 28.52647511754184,
+    "99": 30.992129119113088
+  },
+  "errors": 0,
+  "scope": "Local loopback, one transaction per request; not a production SLA"
+}

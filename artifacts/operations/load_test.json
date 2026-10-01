@@ -1,0 +1,58 @@
+{
+  "measured_at_epoch": 1790775325.746497,
+  "client_platform": "Windows-11-10.0.26200-SP0",
+  "requests": 200,
+  "transactions_per_request": 8,
+  "concurrency": 4,
+  "seconds": 5.390832800010685,
+  "requests_per_second": 37.10001912869633,
+  "latency_ms": {
+    "50": 91.10125000006519,
+    "95": 174.93918002001007,
+    "99": 320.25943900836864
+  },
+  "errors": 0,
+  "status_counts": {
+    "200": 200
+  },
+  "resources_before": {
+    "window_seconds": 300,
+    "requests": 2,
+    "errors_5xx": 0,
+    "error_rate": 0.0,
+    "p95_seconds": 0.02367132998915622,
+    "uptime_seconds": 26.90053653717041,
+    "cpu_seconds": 4.203125,
+    "rss_bytes": 168189952,
+    "container_memory_bytes": null,
+    "container_memory_limit": null,
+    "memory_ratio": null,
+    "disk_free_ratio": 0.037460638738836885,
+    "disk_free_bytes": 7206879232,
+    "note": "Latency covers prediction HTTP requests including validation/auth failures. In-memory window resets on restart."
+  },
+  "resources_after": {
+    "window_seconds": 300,
+    "requests": 202,
+    "errors_5xx": 0,
+    "error_rate": 0.0,
+    "p95_seconds": 0.17298459499870658,
+    "uptime_seconds": 32.32047128677368,
+    "cpu_seconds": 7.28125,
+    "rss_bytes": 170909696,
+    "container_memory_bytes": null,
+    "container_memory_limit": null,
+    "memory_ratio": null,
+    "disk_free_ratio": 0.037333640315384456,
+    "disk_free_bytes": 7182446592,
+    "note": "Latency covers prediction HTTP requests including validation/auth failures. In-memory window resets on restart."
+  },
+  "api_cpu_seconds_delta": 3.078125,
+  "gates": {
+    "p95_pass": true,
+    "error_rate_pass": true,
+    "max_p95_ms": 500,
+    "max_error_rate": 0.01
+  },
+  "scope": "Single API replica; actual HTTP requests including database writes when STATE_DIR is enabled. Local/staging measurement, not an AWS SLA. Memory snapshots are not peak measurements."
+}

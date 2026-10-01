@@ -1,0 +1,38 @@
+{
+  "verified_utc": "2026-09-28T03:41:32.774936+00:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.14",
+  "tests": {
+    "passed": 33,
+    "failed": 0,
+    "warnings": 15,
+    "notes": "Dependency deprecation warnings from Starlette and Matplotlib; no failures"
+  },
+  "lint": "ruff check passed",
+  "training": "complete real benchmark run, five candidates",
+  "batch_score": {
+    "status": "passed",
+    "rows": 42438
+  },
+  "monitor_cli": "passed on final temporal window",
+  "evaluate_cli": "passed; confusion matrix matches training report",
+  "http_load_test": {
+    "requests": 200,
+    "concurrency": 4,
+    "seconds": 1.0578268999233842,
+    "requests_per_second": 189.06685017604062,
+    "latency_ms": {
+      "50": 20.63235000241548,
+      "95": 28.52647511754184,
+      "99": 30.992129119113088
+    },
+    "errors": 0,
+    "scope": "Local loopback, one transaction per request; not a production SLA"
+  },
+  "container": "not executed: Docker engine unavailable",
+  "hosted_ci": "configuration supplied; not run on GitHub",
+  "deployment": "local verification only; no cloud deployment",
+  "visual_qa": "evaluation.png inspected; no overlapping labels or clipped panels",
+  "dependencies": "pip check: no broken requirements",
+  "structured_logging": "Live inference log verified without transaction values or identifiers"
+}

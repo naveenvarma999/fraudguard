@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>FraudGuard | Evaluation</title>
+<style>body{margin:0;background:#f3f6f8;color:#152c3c;font:16px/1.6 system-ui}
+main{max-width:1100px;margin:auto;padding:48px 24px}h1{font-size:44px;letter-spacing:-2px;margin:0}
+.tag{color:#167d9a;letter-spacing:2px;font-size:12px;font-weight:700}.lead{max-width:800px;color:#526474}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:32px 0}
+.card,section{background:white;border:1px solid #dbe3e9;border-radius:12px;padding:22px}
+.card b{display:block;font-size:30px}.card span{color:#526474;font-size:13px}
+section{margin:20px 0}table{width:100%;border-collapse:collapse}td,th{padding:9px;text-align:left;border-bottom:1px solid #e2e8ee}
+img{width:100%;height:auto}.note{border-left:4px solid #d38a3a;padding:16px;background:#fff8eb}
+code{font-size:13px;overflow-wrap:anywhere}@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}h1{font-size:34px}}</style>
+<main><div class="tag">FRAUDGUARD / EXPERIMENT REPORT</div><h1>Risk scores, tested forward in time.</h1>
+<p class="lead">A reproducible fraud screening benchmark with separate model selection, probability calibration,
+policy tuning, and final evaluation windows. Generated from an actual training run.</p>
+<div class="cards"><div class="card"><b>0.662</b><span>Average precision</span></div>
+<div class="card"><b>76.9%</b><span>Fraud recall at fixed threshold</span></div>
+<div class="card"><b>44.0%</b><span>Review precision</span></div>
+<div class="card"><b>0.21%</b><span>Transactions flagged</span></div></div>
+<p class="note">Research benchmark, not a live banking validation. The anonymized PCA inputs cannot be produced
+from raw card transactions without the original upstream transformation. Two days of data cannot establish long-term reliability.</p>
+<section><h2>Measured results</h2><img src="evaluation.png" alt="Precision recall, calibration, confusion matrix, and feature importance">
+<p>Final test: 42,438 transactions, 52 frauds. ROC AUC: 0.9497.
+Brier score: 0.000572. AP bootstrap interval: 0.536–0.812.
+This row bootstrap assumes independent observations and fixes prevalence; it does not capture temporal uncertainty.</p></section>
+<section><h2>How the decision was made</h2><p>Champion: <strong>logistic_balanced</strong>.
+Selection uses tuning-window average precision only. Sigmoid calibration uses the next disjoint window.
+Threshold 0.005685 minimizes simulated review and missed-fraud cost under a 1.0%
+validation review budget. This fixed threshold cannot guarantee the same capacity on future traffic.</p>
+<p>Assumed cost: 2 per review and 100 per missed fraud,
+with perfect recovery of reviewed fraud. Test simulated cost: 1,382 versus
+5,200 with no reviews. These are illustrative units, not measured financial savings.</p>
+<table><tr><th>Candidate</th><th>Tuning AP</th><th>Fit + score</th></tr><tr><td>logistic_balanced</td><td>0.8033</td><td>0.6s</td></tr><tr><td>histboost_leaves15_natural</td><td>0.7954</td><td>5.6s</td></tr><tr><td>histboost_leaves15_balanced</td><td>0.8024</td><td>4.3s</td></tr><tr><td>histboost_leaves31_natural</td><td>0.7687</td><td>4.3s</td></tr><tr><td>histboost_leaves31_balanced</td><td>0.7917</td><td>4.8s</td></tr></table></section>
+<section><h2>Data and leakage controls</h2><p>284,807 input rows;
+1,081 exact duplicates removed; 486 rows purged near boundaries.
+Same timestamps remain together. All preprocessing is fit inside training. Time is used only for splitting.</p>
+<table><tr><th>Window</th><th>Rows</th><th>Frauds</th><th>Seconds from start</th></tr><tr><td>train</td><td>141,863</td><td>262</td><td>0–84692</td></tr><tr><td>tune</td><td>42,469</td><td>87</td><td>84753–126512</td></tr><tr><td>calibrate</td><td>28,247</td><td>30</td><td>126573–139297</td></tr><tr><td>policy</td><td>28,223</td><td>41</td><td>139358–151319</td></tr><tr><td>test</td><td>42,438</td><td>52</td><td>151381–172792</td></tr></table>
+<p>Data SHA-256: <code>76274b691b16a6c49d3f159c883398e03ccd6d1ee12d9d8ee38f4b4b98551a89</code></p></section>
+<section><h2>Operational interpretation</h2><p>Global feature importance explains dependence on anonymized components,
+not causal reasons for an individual transaction. No protected attributes or customer identifiers are available,
+so fairness, repeat-customer leakage, and customer-level generalization remain untested.</p>
+<p>Drift monitor alert on test versus training: <strong>True</strong>.
+PSI is a diagnostic heuristic; pair it with delayed labeled performance and review-queue capacity.</p>
+<p>See evaluation.json for complete measured results and docs/RUNBOOK.md for deployment and rollback.</p></section>
+<footer>Seed 42 · 2026-09-28T03:31:02.646570+00:00 · Training and analysis 29.8s</footer></main></html>

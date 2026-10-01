@@ -1,0 +1,15 @@
+{
+  "version": "2.1.0",
+  "verified_utc": "2026-09-30T16:32:16.946405+00:00",
+  "python_tests": 66,
+  "javascript_data_tests": 7,
+  "upstream_deprecation_warnings": 15,
+  "browser": "Account, scoring, review, labels, export, monitoring, roles and mobile workflows passed; no JavaScript errors",
+  "recovery": "Full backup/restore with model and history parity; revoked restored sessions; corrupt archives and changed snapshots rejected; crashed SQLite writer rolled back; firing alerts survive monitor restart",
+  "deployment": "Local HTTP contract checks passed. Success/failure rollback branches tested with fake Docker. Compose validation and Bash syntax checks passed.",
+  "package": "Wheel built with all 10 static assets",
+  "external_alerts": "Retry/backoff/idempotency/error redaction tested using fake transport. Real delivery disabled; destination not supplied.",
+  "off_host_backups": "S3 exporter and optional systemd timer supplied; not configured or executed",
+  "security_audit": "Dependency audit workflow supplied; no online vulnerability scan was executed",
+  "aws": "Existing deployment unchanged; live Docker/AWS checks pending"
+}

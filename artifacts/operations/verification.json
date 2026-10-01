@@ -1,0 +1,45 @@
+{
+  "release": "2.0.0",
+  "verified_utc": "2026-09-30T16:03:37.099513+00:00",
+  "python_tests": {
+    "passed": 51,
+    "warnings": 15,
+    "notes": "Upstream deprecation warnings"
+  },
+  "javascript_data_tests": {
+    "passed": 7
+  },
+  "browser_checks": [
+    "analyst login and role visibility",
+    "CSV scoring and persistence",
+    "review and delayed-label entry",
+    "history CSV export",
+    "audit history",
+    "administrator monitoring/release/user screens",
+    "390px layout without page overflow",
+    "memory-only browser credentials",
+    "refresh signs browser out"
+  ],
+  "security_and_recovery_checks": [
+    "record ownership",
+    "session revocation and expiry",
+    "login throttling",
+    "password changes",
+    "append-only audit",
+    "concurrent prediction accounting",
+    "consistent DB backup",
+    "retention",
+    "independent model approval",
+    "failed gates",
+    "tampered bundles",
+    "active model restart recovery",
+    "rollback after corruption"
+  ],
+  "load_report": "load_test.json",
+  "wheel": "Built and smoke-tested installed package; all 10 static assets included",
+  "docker_compose": "Configuration validation passed",
+  "docker_image_execution": "Not run locally: Docker engine access denied in this assistant session",
+  "github_workflows": "Provided, not executed in user account",
+  "aws_deployment": "Pending user deployment; no changes made to running EC2 instance",
+  "alerts": "Dashboard and structured logs. External message delivery not configured."
+}

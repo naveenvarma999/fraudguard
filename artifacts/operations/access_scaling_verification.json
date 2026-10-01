@@ -1,0 +1,19 @@
+{
+  "version": "2.2.0",
+  "verified_utc": "2026-10-01T03:52:12.187363+00:00",
+  "python_tests": 78,
+  "python_detail": "76-test full suite passed; two additional markup/version-consistency regressions added and all 12 access/scaling tests passed afterward.",
+  "javascript_tests": 7,
+  "browser": "MFA enrollment, mobile layout, one-use recovery login and replay rejection, memory-only credentials, scoring and two-worker monitoring passed.",
+  "local_http": "One coordinator plus two real scoring processes; 20 requests, 8 rows/request, concurrency 4, 0 errors. See scaling_local_http.json.",
+  "deployment_contracts": "Local HTTP version/auth/security/model/monitoring checks passed.",
+  "configuration": "Base plus workers Compose config validated; Bash syntax and Ruff passed.",
+  "failure_testing": "Concurrent account quota, MFA replay, worker failure/full outage and in-flight model switch tested with real FastAPI TestClient workers; no Linux container outage drill.",
+  "aws": "Not updated. No new AWS infrastructure created.",
+  "limitations": [
+    "Single coordinator and host; SQLite persistence is not horizontally scaled.",
+    "Not AWS API Gateway or automatic scaling.",
+    "No live AWS capacity benchmark.",
+    "Authenticator uses manual setup key; no email delivery or QR service."
+  ]
+}

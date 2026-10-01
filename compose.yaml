@@ -1,0 +1,71 @@
+services:
+  api:
+    build: .
+    image: fraudguard-api:2.3.0
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      API_KEY: ${API_KEY:?Set a random API_KEY of at least 16 characters}
+      MONITOR_KEY: ${MONITOR_KEY:?Set a separate random MONITOR_KEY}
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Run scripts/configure_security.py first}
+      REQUIRE_MFA: "true"
+      MODEL_DIR: /app/artifacts/benchmark
+      STATE_DIR: ${FRAUDGUARD_STATE_DIR:-/data}
+    volumes:
+      - workspace_data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,noexec,nosuid
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 128
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  monitor:
+    build: .
+    image: fraudguard-api:2.3.0
+    command: ["python", "-m", "fraudguard.watchdog"]
+    environment:
+      MONITOR_KEY: ${MONITOR_KEY:?Set MONITOR_KEY}
+      BACKUP_DIR: /backups
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+      ALERT_WEBHOOK_TOKEN: ${ALERT_WEBHOOK_TOKEN:-}
+      STATE_DIR: ${FRAUDGUARD_STATE_DIR:-/data}
+      MONITOR_URL: http://api:8000
+      RETENTION_DAYS: 90
+    volumes:
+      - workspace_data:/data
+      - backup_data:/backups
+    depends_on:
+      api:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,noexec,nosuid
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.25
+    pids_limit: 64
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import time; from pathlib import Path; assert time.time()-float(Path('/data/monitor-heartbeat').read_text())<180"]
+      interval: 60s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  workspace_data:
+  backup_data:

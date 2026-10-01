@@ -1,0 +1,124 @@
+{
+  "rows": 42438,
+  "heuristic_threshold": 0.2,
+  "alert": true,
+  "features": {
+    "V1": {
+      "psi": 1.6037880627555634,
+      "investigate": true
+    },
+    "V2": {
+      "psi": 0.03152176281782147,
+      "investigate": false
+    },
+    "V3": {
+      "psi": 1.5011317656102816,
+      "investigate": true
+    },
+    "V4": {
+      "psi": 0.2520182067319633,
+      "investigate": true
+    },
+    "V5": {
+      "psi": 0.338637033012804,
+      "investigate": true
+    },
+    "V6": {
+      "psi": 0.1076370921549408,
+      "investigate": false
+    },
+    "V7": {
+      "psi": 0.15422232524838184,
+      "investigate": false
+    },
+    "V8": {
+      "psi": 0.0980890374493639,
+      "investigate": false
+    },
+    "V9": {
+      "psi": 0.06154972005240342,
+      "investigate": false
+    },
+    "V10": {
+      "psi": 0.07428563607576116,
+      "investigate": false
+    },
+    "V11": {
+      "psi": 0.4823579613178358,
+      "investigate": true
+    },
+    "V12": {
+      "psi": 0.08508904122442577,
+      "investigate": false
+    },
+    "V13": {
+      "psi": 0.01989279362276151,
+      "investigate": false
+    },
+    "V14": {
+      "psi": 0.08138593426587501,
+      "investigate": false
+    },
+    "V15": {
+      "psi": 0.39448419321544403,
+      "investigate": true
+    },
+    "V16": {
+      "psi": 0.012824061795356095,
+      "investigate": false
+    },
+    "V17": {
+      "psi": 0.06292933699283489,
+      "investigate": false
+    },
+    "V18": {
+      "psi": 0.05316933178768517,
+      "investigate": false
+    },
+    "V19": {
+      "psi": 0.04274127044106169,
+      "investigate": false
+    },
+    "V20": {
+      "psi": 0.10038431792117057,
+      "investigate": false
+    },
+    "V21": {
+      "psi": 0.1715080006060211,
+      "investigate": false
+    },
+    "V22": {
+      "psi": 0.32895992740134605,
+      "investigate": true
+    },
+    "V23": {
+      "psi": 0.2521039515276223,
+      "investigate": true
+    },
+    "V24": {
+      "psi": 0.22572278173995236,
+      "investigate": true
+    },
+    "V25": {
+      "psi": 0.5184550489499036,
+      "investigate": true
+    },
+    "V26": {
+      "psi": 0.2452309124842279,
+      "investigate": true
+    },
+    "V27": {
+      "psi": 0.08324248888473916,
+      "investigate": false
+    },
+    "V28": {
+      "psi": 1.0224741851295436,
+      "investigate": true
+    },
+    "Amount": {
+      "psi": 0.024159731769037168,
+      "investigate": false
+    }
+  },
+  "interpretation": "Heuristic distribution shift only; join delayed labels for quality"
+}
