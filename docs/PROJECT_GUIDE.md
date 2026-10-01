@@ -1,3 +1,5 @@
+> Historical full project guide. For current setup use the repository README. v2.2 was verified on EC2 from deployment logs; v2.3 AWS deployment is tracked separately.
+
 # FraudGuard
 
 **An end-to-end, production-oriented machine learning reference project for transaction fraud screening.** It includes an actual trained model and measured evaluation, not just a proposed architecture.
