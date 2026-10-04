@@ -10,6 +10,10 @@ if [[ -f .proxy-enabled && -f compose.override.yaml ]]; then
 fi
 if [[ -f compose.override.yaml ]]; then base+=(-f compose.override.yaml); fi
 if [[ -f .proxy-enabled ]]; then base+=(-f compose.proxy.yaml); fi
+if [[ -f .storage-enabled ]]; then
+  mountpoint -q /srv/fraudguard || { echo 'Durable storage is not mounted; refusing startup' >&2; exit 1; }
+  base+=(-f compose.storage.yaml)
+fi
 if [[ -f .workers-enabled ]]; then base+=(-f compose.workers.yaml); fi
 "${base[@]}" config --quiet
 old_container=$("${base[@]}" ps -q api)
@@ -33,7 +37,7 @@ rollback() {
 trap rollback ERR
 "${base[@]}" build api
 "${base[@]}" up -d --no-build --wait --wait-timeout 240
-"${base[@]}" exec -T api python -m fraudguard.deployment --expected-version 2.4.0 --require-backup --attempts 8 --interval 15
+"${base[@]}" exec -T api python -m fraudguard.deployment --expected-version 2.5.0 --require-backup --attempts 8 --interval 15
 "${base[@]}" exec -T monitor python -m fraudguard.backups check-latest
 if [[ -f .workers-enabled ]]; then "${base[@]}" exec -T api python -m fraudguard.check_workers; fi
 trap - ERR

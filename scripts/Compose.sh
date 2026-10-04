@@ -9,5 +9,9 @@ if [[ -f .proxy-enabled && -f compose.override.yaml ]]; then
 fi
 if [[ -f compose.override.yaml ]]; then args+=(-f compose.override.yaml); fi
 if [[ -f .proxy-enabled ]]; then args+=(-f compose.proxy.yaml); fi
+if [[ -f .storage-enabled ]]; then
+  mountpoint -q /srv/fraudguard || { echo 'Durable storage is not mounted; refusing startup' >&2; exit 1; }
+  args+=(-f compose.storage.yaml)
+fi
 if [[ -f .workers-enabled ]]; then args+=(-f compose.workers.yaml); fi
 exec "${args[@]}" "$@"

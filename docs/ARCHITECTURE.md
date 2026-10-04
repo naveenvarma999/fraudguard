@@ -2,36 +2,24 @@
 
 ```mermaid
 flowchart LR
-    A[Versioned transaction snapshot] --> B[Validate and deduplicate]
-    B --> C[Chronological windows]
-    C --> D[Candidate training and selection]
-    D --> E[Independent calibration]
-    E --> F[Review policy selection]
-    F --> G[Final holdout report]
-    F --> H[Immutable model and manifest]
-    H --> I[Authenticated prediction API]
-    I --> J[Pass or review recommendation]
-    I --> K[Prometheus service metrics]
-    L[New feature window] --> M[PSI drift analysis]
-    H --> M
-    N[Mature outcome labels] --> O[Delayed performance evaluation]
-    H --> O
+    A[Authenticated new transaction] --> B[Request quota and capacity check]
+    B --> C[SQLite write transaction]
+    C --> D[Read prior account events]
+    D --> E[Point-in-time behavioral features]
+    E --> F[Sparkov model and cold-start policy]
+    F --> G[Atomic event and prediction persistence]
+    G --> H[Analyst review and delayed labels]
+    G --> I[Version-specific feature bins]
+    H --> J[Quality monitoring]
+    I --> K[Drift monitoring]
 ```
 
-## Boundaries
+The headline workflow is behavioral screening with server-owned history. Its trusted model is bundled with the application. The original ULB model remains an independent baseline and supports its existing approved-release registry and optional scoring workers. Both models write to the same review workspace, but their features and quality metrics remain separate.
 
-The training process is a local batch job. The inference service loads exactly one fixed release at startup. No endpoint uploads, retrains, or swaps a model. To promote a model, deploy a new image or point a new process at an immutable release and verify readiness.
+Behavioral ingestion is ordered per authenticated owner/account and uses one SQLite writer. It accepts no supplied history. Retried event IDs return saved responses; conflicting or late events fail. All equal-time events are excluded from features. See [API contract](BEHAVIORAL_API.md) for exact timing and retention semantics.
 
-The API is stateless and does not persist transaction data. `transaction_id` is a response correlation key, not an idempotency ledger. Since scoring has no business side effects, retrying the same input with the same model is safe. The caller owns persistence, review-queue delivery, and retries.
+The service has one coordinator and four bounded inference slots. Optional worker load balancing applies to ULB scoring, not the behavioral database transaction. Prometheus counters reset after process restart; SQLite holds durable prediction and audit records. Neither multiple local workers nor EBS provides automatic failover.
 
-The service uses one worker per container, with at most four simultaneous model calls and two native numerical threads. Scale containers rather than increasing worker count without redesigning Prometheus aggregation. The local semaphore bounds model computation, not all HTTP requests; Uvicorn and the ingress must bound connections and queues.
+Checksummed model files still require a trusted artifact supply chain. The behavioral model artifact and manifest are included in the database backup for recovery and audit. Startup loads the configured trusted bundle; recovering an older model requires deliberate operator selection of the matching artifact, not automatic deserialization from an uploaded archive.
 
-## Artifact trust
-
-`manifest.json` records the model hash and schema. `load_bundle` verifies them before deserializing. Artifact storage and the image supply chain must be trusted: a checksum alongside a file is not a signature. The release pipeline must enforce access control and, for a live deployment, signed/attested images or equivalent provenance.
-
-## Monitoring boundaries
-
-Prometheus metrics are process-local and reset after restart. They are aggregate service measures, not durable audit records. Metrics access requires the same API key as predictions in this reference implementation; use separate credentials and network policies in a shared environment.
-
-The offline drift command compares raw feature distributions using stored training bins. It does not automatically collect live features, schedule jobs, send alerts, or retrain. A production data pipeline must provide windowed snapshots and mature labels. Avoid storing payment-sensitive raw data in monitoring labels or logs.
+For new Terraform hosts, encrypted EBS holds workspace data, backups and application secrets independently of the root disk. The volume and Elastic IP have deletion guards; the instance can be replaced. Bootstrap is for initial provisioning, and the checked deployment script applies app updates. Off-host backups and a tested restore remain necessary. No Terraform apply is claimed; see [infrastructure status](../infra/README.md).

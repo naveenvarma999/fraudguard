@@ -174,7 +174,7 @@ def alert_conditions(snapshot):
     if snapshot is None:
         return {"service_unavailable": (True, "API monitor check failed")}
     t, d, q = snapshot["telemetry"], snapshot["drift"], snapshot["quality"]
-    return {
+    conditions = {
         "service_unavailable": (False, "API available"),
         "high_error_rate": (
             t["requests"] >= 20 and t["error_rate"] > 0.02,
@@ -205,6 +205,24 @@ def alert_conditions(snapshot):
             "Monitoring cohort exceeds 100,000 rows; reduce window",
         ),
     }
+    behavioral = snapshot.get("behavioral")
+    if behavioral:
+        bd, bq = behavioral["drift"], behavioral["quality"]
+        conditions.update(
+            behavioral_feature_drift=(
+                bd["status"] == "measured" and bd["max_psi"] >= 0.2,
+                "Behavioral feature PSI >= 0.2; investigate distribution shift",
+            ),
+            behavioral_low_recall=(
+                bq["status"] == "measured" and bq["recall"] < 0.6,
+                "Behavioral labeled-cohort recall below 60%; inspect label coverage and bias",
+            ),
+            behavioral_monitoring_window_full=(
+                bq["status"] == "window_too_large",
+                "Behavioral monitoring exceeds 100,000 rows; reduce window",
+            ),
+        )
+    return conditions
 
 
 def update_alerts(store, conditions):

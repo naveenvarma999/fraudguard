@@ -1,17 +1,31 @@
 # FraudGuard
 
-**Fraud screening and human review, with a new research track for point-in-time account behavior and verified online/offline feature parity.**
+**Sparkov behavioral fraud screening with server-owned account history, human review, and verified online/offline feature parity.**
 
 [Public sample demo](https://3.9.213.56/) · [API documentation](https://3.9.213.56/docs) · [Behavioral experiment](docs/BEHAVIORAL_RESEARCH.md) · [Operations](docs/OPERATIONS.md)
 
 [![Validate](https://github.com/naveenvarma999/fraudguard/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/naveenvarma999/fraudguard/actions/workflows/ci.yml)
 [![Dependency security](https://github.com/naveenvarma999/fraudguard/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/naveenvarma999/fraudguard/actions/workflows/security.yml)
 
-The public demo is read-only sample scoring; accounts are operator-created. It was reachable on 2026-10-04. This is a single EC2 host, so availability and the IP can change. The v2.4 changes have not yet been deployed there.
+The public demo is read-only sample scoring; accounts are operator-created. It was reachable on 2026-10-04. This is a single EC2 host, so availability and the IP can change. The v2.4 and v2.5 changes have not yet been deployed there. Local source version is 2.5.0; this does not prove the live version.
 
-## Measured benchmark results
+## Primary workflow: behavioral scoring in v2.5
 
-The serving model uses the ULB credit-card benchmark: chronological fit, selection, calibration, policy and test windows, with boundary gaps and duplicate removal. Logistic regression won on selection data; a separate calibration window fits sigmoid calibration.
+The authenticated `/v1/behavioral/predict` endpoint accepts one new event and derives features from server-owned history. Events, scores, review records and ordering markers commit atomically. The workspace now submits behavioral events, displays saved feature context, accepts verified labels, and reports model-specific drift and quality. Persisted HTTP tests compare features and scores with an independent offline implementation. [Request example and API contract](docs/BEHAVIORAL_API.md).
+
+| Evaluation | Average precision |
+|---|---:|
+| Original simulator, unseen accounts, **11 seeds** | **0.7798 mean; 0.6598–0.9240 range** |
+| External Sparkov, chronological seen accounts | 0.5930 (133 fraud cases) |
+| External Sparkov, held-out accounts | 0.6384 (10 fraud cases) |
+
+[All seed reports](artifacts/behavioral/multiseed/summary.json) · [Sparkov results and provenance](docs/SPARKOV.md)
+
+CI checks the reproduced dataset hash, feature contract, split counts, selected model, threshold and metrics against the committed reference. Training can create MLflow runs before fitting, track both candidate models and their parameters, and record failures.
+
+## ULB comparison baseline
+
+The separate `/v1/predict` baseline uses the ULB credit-card benchmark: chronological fit, selection, calibration, policy and test windows, with boundary gaps and duplicate removal. Logistic regression won on selection data; a separate calibration window fits sigmoid calibration.
 
 | Final temporal test | Result |
 |---|---:|
@@ -25,20 +39,6 @@ The serving model uses the ULB credit-card benchmark: chronological fit, selecti
 | False alerts | 51 |
 
 [Model card](docs/DATA_AND_MODEL_CARD.md) · [Evaluation evidence](artifacts/benchmark/evaluation.json). Two historical days do not establish live banking performance. Inputs are `Amount` and anonymized `V1`–`V28`, not bank statements or card numbers.
-
-## Behavioral scoring in v2.4
-
-The authenticated `/v1/behavioral/predict` endpoint scores raw transaction events with supplied account history. It uses the same timing contract tested against the independent offline implementation. [Request example and API contract](docs/BEHAVIORAL_API.md).
-
-| Evaluation | Average precision |
-|---|---:|
-| Original simulator, unseen accounts, **11 seeds** | **0.7798 mean; 0.6598–0.9240 range** |
-| External Sparkov, chronological seen accounts | 0.5930 (133 fraud cases) |
-| External Sparkov, held-out accounts | 0.6384 (10 fraud cases) |
-
-[All seed reports](artifacts/behavioral/multiseed/summary.json) · [Sparkov results and provenance](docs/SPARKOV.md)
-
-CI checks the reproduced dataset hash, feature contract, split counts, selected model, threshold and metrics against the committed reference. Training can create MLflow runs before fitting, track both candidate models and their parameters, and record failures.
 
 ## Run and reproduce
 
@@ -79,6 +79,6 @@ The first public commit imported an already-developed local v2.3 snapshot. Earli
 
 Both behavioral datasets are synthetic. Sparkov is an independent external generator, not real banking data; the held-out cohort has only 10 fraud cases. The small internal simulation has roughly 10% fraud, deliberately informative behavior, and no realistic temporal drift. Its split comparisons test evaluation mechanics, not evidence that leakage necessarily inflates scores. Cold-start metrics with no fraud examples are reported as `null` with an insufficient-data status.
 
-Behavioral scores are uncalibrated and use caller-supplied history, capped at 1,000 events. This endpoint is stateless; durable streaming ingestion, verified history completeness and a distributed feature store remain future work. The original V1–V28 workspace remains separate. The deployment has one host and coordinator; Terraform has not been applied, and local container validation remains dependent on a running Docker engine. See [verification](docs/VERIFICATION.md) for exactly what ran.
+Behavioral scores remain uncalibrated. The Sparkov result still has only 10 held-out fraud cases; a 1,000+ customer experiment, enriched features, calibration and account-bootstrap intervals remain outstanding. In the six simulator seeds with evaluable cold-start fraud, threshold-only scoring detected none: the served policy now sends every event without history to manual review. This raises review workload and is not evidence of improved model discrimination. History is isolated by submitting user and account, capped at 10,000 prior events per 30-day window, and serialized through one SQLite writer. Upstream authenticity/completeness, multi-tenant organization accounts and distributed ingestion are not implemented. The deployment has one host and coordinator; the revised durable-volume Terraform has not been applied, and local container validation remains dependent on a running Docker engine. See [verification](docs/VERIFICATION.md) for exactly what ran.
 
 This project was developed with substantial AI assistance using OpenAI Codex, including implementation, tests and documentation. The decisions, tests, measured outputs and commit history are available for review. [Design decisions](docs/DECISIONS.md) explain equal-time exclusion, canonical ordering, unlabeled history and operational tradeoffs; AI assistance is not a substitute for understanding those choices.

@@ -1,4 +1,4 @@
-"""Authenticated, stateless behavioral scoring with caller-supplied prior history."""
+"""Behavioral model bundles and scoring against server-owned prior history."""
 
 import hashlib
 import json
@@ -9,7 +9,7 @@ import joblib
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from fraudguard.behavioral import FEATURES, Event, OnlineFeatures, reasons
+from fraudguard.behavioral import FEATURES, OnlineFeatures, reasons
 
 
 class RawEvent(BaseModel):
@@ -17,7 +17,7 @@ class RawEvent(BaseModel):
     event_id: str = Field(min_length=1, max_length=100)
     account_id: str = Field(min_length=1, max_length=100)
     merchant_id: str = Field(min_length=1, max_length=100)
-    timestamp: int = Field(ge=0)
+    timestamp: int = Field(ge=0, le=253402300799)
     amount: float = Field(ge=0, le=1e9)
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
@@ -26,10 +26,9 @@ class RawEvent(BaseModel):
 class BehavioralRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     transaction: RawEvent
-    history: list[RawEvent] = Field(default_factory=list, max_length=1000)
 
 
-def save_bundle(directory, model, report):
+def save_bundle(directory, model, report, reference=None):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, directory / "model.joblib")
@@ -44,8 +43,9 @@ def save_bundle(directory, model, report):
         "dataset_sha256": report["dataset_sha256"],
         "seed": report["seed"],
         "score_kind": "uncalibrated",
-        "history_source": "caller-supplied",
+        "history_source": "server-owned",
         "model_type": report["selected_model"],
+        "reference": reference or {},
     }
     (directory / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
@@ -71,20 +71,11 @@ def load_bundle(directory):
     return model, manifest
 
 
-def score(bundle, payload):
-    current = Event(**payload.transaction.model_dump())
-    history = [Event(**row.model_dump()) for row in payload.history]
-    identifiers = [row.event_id for row in history] + [current.event_id]
-    if len(set(identifiers)) != len(identifiers):
-        raise ValueError("Use unique event IDs")
-    if any(
-        row.account_id != current.account_id or row.timestamp >= current.timestamp
-        for row in history
-    ):
-        raise ValueError("History must contain only earlier events for the same account")
+def score_event(bundle, current, history):
+    from collections import deque
+
     engine = OnlineFeatures()
-    for row in sorted(history, key=lambda event: (event.timestamp, event.event_id)):
-        engine.process(row)
+    engine.history[current.account_id] = deque(history)
     features = engine.process(current)
     model, manifest = bundle
     risk = float(model.predict_proba(pd.DataFrame([features], columns=FEATURES))[0, 1])
@@ -99,6 +90,6 @@ def score(bundle, payload):
         "decision": "review" if risk >= manifest["threshold"] else "pass",
         "features": features,
         "context": reasons(features),
-        "history_source": "caller-supplied",
+        "history_source": "server-owned",
         "cold_start": bool(features["cold_start"]),
     }

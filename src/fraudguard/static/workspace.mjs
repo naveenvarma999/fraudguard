@@ -10,7 +10,7 @@ function clear() {
   $('workspace').hidden = true; $('signin').hidden = false; $('logout').hidden = true; $('identity').textContent = '';
   document.querySelectorAll('form').forEach(f => f.reset());
   ['queue-list','audit-list','monitor-content','release-list','user-list'].forEach(id => $(id).replaceChildren());
-  $('upload-feedback').hidden = true; $('upload-result').replaceChildren(); state.events = []; state.overview = null; ['overview-metrics','overview-recent','detail-timeline','detail-metrics'].forEach(id => $(id).replaceChildren()); $('mfa-enrollment').hidden = true; $('mfa-secret').value = ''; $('recovery-codes').textContent = ''; $('mfa-recovery').hidden = true; $('mfa-confirm').hidden = false;
+  $('upload-feedback').hidden = true; $('upload-result').replaceChildren(); state.events = []; state.overview = null; ['overview-metrics','overview-recent','detail-timeline','detail-metrics','behavioral-context'].forEach(id => $(id).replaceChildren()); $('mfa-enrollment').hidden = true; $('mfa-secret').value = ''; $('recovery-codes').textContent = ''; $('mfa-recovery').hidden = true; $('mfa-confirm').hidden = false;
 }
 async function api(path, method = 'GET', body) {
   const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 20000);
@@ -33,7 +33,7 @@ function button(label, fn) { const b = node('button', label, 'text-button'); b.o
 async function queue(older = false) {
   const last = state.rows.at(-1); const rows = await api(`/ops/predictions?decision=${$('decision-filter').value}${older && last ? `&before=${last.id}` : ''}`);
   state.rows = older ? [...state.rows, ...rows] : rows; $('more-history').hidden = rows.length < 50;
-  table($('queue-list'), ['Transaction / time', 'Model', 'Amount', 'Probability', 'Recommendation', 'Review / outcome', 'Action'], state.rows, r => [r.transaction_id + '\n' + date(r.at), r.model, r.amount.toLocaleString(), pct(r.probability), r.decision, `${r.review} / ${r.fraud == null ? 'unlabeled' : r.fraud ? 'fraud' : 'not fraud'}`, button('Review ↗', () => openReview(r))]);
+  table($('queue-list'), ['Transaction / time', 'Model', 'Amount', 'Risk score', 'Recommendation', 'Review / outcome', 'Action'], state.rows, r => [r.transaction_id + '\n' + date(r.at), r.model, r.amount.toLocaleString(), pct(r.probability), r.decision, `${r.review} / ${r.fraud == null ? 'unlabeled' : r.fraud ? 'fraud' : 'not fraud'}`, button('Review ↗', () => openReview(r))]);
 }
 async function openReview(row) {
   $('review-message').textContent = ''; state.route = `transaction/${encodeURIComponent(row.id)}`;
@@ -52,7 +52,9 @@ async function detail(identifier, older = false) {
     $('review-summary').textContent = `Scored ${date(row.at)} · ${row.owner} · Model ${row.model}. Prediction ID: ${row.id}`;
     $('review-disposition').value = row.review; $('review-note').value = row.note;
     $('label-source').value = result.label?.source || ''; $('label-fraud').value = String(result.label?.fraud ?? 1);
-    cards($('detail-metrics'), [['Fraud probability', pct(row.probability), `Review threshold ${pct(row.threshold)}`], ['Recommendation', row.decision === 'review' ? 'Review' : 'Pass', 'A recommendation, not a verified outcome'], ['Amount', row.amount.toLocaleString(), 'Currency is not provided by this dataset'], ['Verified outcome', result.label ? result.label.fraud ? 'Fraud' : 'Not fraud' : 'Not recorded', result.label ? `Recorded by ${result.label.actor}` : 'Requires evidence, such as a confirmed chargeback']]);
+    cards($('detail-metrics'), [[result.behavioral ? 'Uncalibrated risk score' : 'Fraud probability', pct(row.probability), `Review threshold ${pct(row.threshold)}`], ['Recommendation', row.decision === 'review' ? 'Review' : 'Pass', 'A recommendation, not a verified outcome'], ['Amount', row.amount.toLocaleString(), 'Currency is not provided by this dataset'], ['Verified outcome', result.label ? result.label.fraud ? 'Fraud' : 'Not fraud' : 'Not recorded', result.label ? `Recorded by ${result.label.actor}` : 'Requires evidence, such as a confirmed chargeback']]);
+    $('behavioral-context').replaceChildren();
+    if (result.behavioral) { const b = result.behavioral; $('behavioral-context').append(node('h3','Behavioral evidence'), node('p', b.context.join('. ')), node('p', b.decision_reason === 'cold_start_manual_review' ? 'Manual review: no prior account history. This policy overrides the score threshold.' : 'Recommendation based on the model threshold.')); const details = node('details'); details.append(node('summary','Inspect saved features'),node('pre',JSON.stringify(b.features,null,2))); $('behavioral-context').append(details); }
     $('detail-next').textContent = row.review === 'open' ? (row.decision === 'review' ? 'Investigate this flagged transaction. Record your review and reasoning below.' : 'No review was recommended. You can still investigate and record evidence if needed.') : 'A review has been recorded. Add a verified outcome when evidence arrives, or document a correction.';
   }
   $('detail-timeline').replaceChildren();
@@ -74,7 +76,8 @@ async function audit(older = false) {
 }
 async function monitoring() {
   const data = await api('/ops/monitoring'); const root = $('monitor-content'); root.replaceChildren();
-  root.append(node('p', `Active model: ${data.model_version}`)); const t = data.telemetry, d = data.drift, q = data.quality;
+  if (data.behavioral) { const b = data.behavioral, card = node('article',undefined,'panel ops-card'); card.append(node('h2','Behavioral model health'),node('p',`Model ${b.model_version}`),node('p',`${b.quality.predictions ?? 0} predictions · ${b.quality.labeled ?? 0} verified outcomes · Recall ${pct(b.quality.recall)}`),node('p',`Drift: ${b.drift.status}. Quality: ${b.quality.status}.`)); root.append(card); }
+  root.append(node('p', `ULB baseline model: ${data.model_version}`)); const t = data.telemetry, d = data.drift, q = data.quality;
   const grid = node('div', undefined, 'ops-metrics');
   for (const [label, value, note] of [['Prediction p95', t.p95_seconds == null ? 'No traffic' : `${(t.p95_seconds * 1000).toFixed(1)} ms`, `${t.requests} requests / 5 minutes`], ['5xx error rate', pct(t.error_rate), 'Prediction HTTP responses'], ['Memory use', pct(t.memory_ratio), t.rss_bytes == null ? 'Container counters available on Linux' : `${(t.rss_bytes / 1048576).toFixed(1)} MiB API resident memory`], ['Largest feature PSI', d.max_psi == null ? 'Collecting data' : d.max_psi.toFixed(3), `${d.rows} rows; minimum 1,000`], ['Observed fraud recall', pct(q.recall), 'Needs 50 labels, 5 fraud and 5 non-fraud'], ['Label coverage', pct(q.label_coverage), `${q.labeled ?? 0} labels / ${q.predictions ?? 0} predictions`]]) {
     const card = node('article', undefined, 'panel'); card.append(node('span', label), node('strong', value), node('small', note)); grid.append(card);
@@ -217,3 +220,9 @@ window.addEventListener('hashchange', action(async () => {
   if (route.startsWith('transaction/')) await detail(decodeURIComponent(route.slice(12)));
   else if (['overview','queue','flow','monitor','releases','audit','users','account'].includes(route)) await section(route);
 }));
+
+$('behavioral-form').onsubmit = action(async () => {
+  const transaction = {event_id: $('behavioral-event').value.trim(), account_id: $('behavioral-account').value.trim(), merchant_id: $('behavioral-merchant').value.trim(), timestamp: Math.floor(Date.parse($('behavioral-time').value + 'Z')/1000), amount: Number($('behavioral-amount').value), latitude: Number($('behavioral-lat').value), longitude: Number($('behavioral-lon').value)};
+  const result = await api('/v1/behavioral/predict','POST',{transaction});
+  await openReview({id: result.prediction_id});
+});

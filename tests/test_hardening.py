@@ -206,13 +206,13 @@ def test_deployment_checks_reject_wrong_version_and_missing_backup(secured, monk
         )
 
     monkeypatch.setattr(urllib.request, "urlopen", transport)
-    assert check("http://local.test", "2.4.0", KEY)["status"] == "passed"
+    assert check("http://local.test", "2.5.0", KEY)["status"] == "passed"
     with pytest.raises(ValueError, match="version"):
         check("http://local.test", "incorrect", KEY)
     with pytest.raises(ValueError, match="backup"):
-        check("http://local.test", "2.4.0", KEY, require_backup=True)
+        check("http://local.test", "2.5.0", KEY, require_backup=True)
     create_backup(store, tmp_path / "backups")
-    assert check("http://local.test", "2.4.0", KEY, require_backup=True)["status"] == "passed"
+    assert check("http://local.test", "2.5.0", KEY, require_backup=True)["status"] == "passed"
 
 
 def test_backup_schedule_survives_monitor_restart(secured, tmp_path, monkeypatch):

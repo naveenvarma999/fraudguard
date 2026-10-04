@@ -1,3 +1,17 @@
+# Verification — v2.5 persisted behavioral workflow, 2026-10-04
+
+The v2.5 change adds server-owned event history, atomic prediction storage, retries, account isolation, cold-start manual review, workspace submission/detail integration, model-specific monitoring/alerts and model-aware backups. Model weights remain those trained for v2.4; training-only drift bins were added after checking the original normalized dataset digest.
+
+Validation: **114 tests passed** in the full Python suite; **13 targeted behavioral/monitoring tests passed** after the last alert and timestamp-validation changes (including one new oversized-timestamp case). Seven JavaScript data tests passed, workspace JavaScript syntax, Ruff, Compose configuration (including durable storage), Bash script syntax and Terraform formatting. Browser interaction and a new Docker build were not verified locally.
+
+The infrastructure change separates encrypted EBS state from the replaceable instance, preserves application secrets and removes source-commit-driven replacement. Only formatting and script/configuration checks ran: **no Terraform provider validation, plan, apply, EBS migration or cloud recovery exercise is claimed.** Existing installations must follow the explicit migration steps in the infrastructure README; enabling empty bindings would hide existing data.
+
+This branch includes the unmerged v2.4 work. GitHub publication/merge and AWS deployment remain outstanding. No new CI run is claimed. The last observed live version was 2.3.0 with verified HTTPS, as recorded below.
+
+Remaining feedback: a 1,000+ customer Sparkov generation, enriched category/hour/home-distance features, independent calibration, prevalence-aware comparisons and account-bootstrap intervals have not been completed in this update. The research metrics below are unchanged and do not evaluate the new all-cold-start manual-review policy.
+
+---
+
 # Verification — v2.4 review fixes, 2026-10-04
 
 ## Completed locally
@@ -24,7 +38,7 @@ On 2026-10-04, HTTPS requests to the public readiness and OpenAPI endpoints succ
 
 The EC2 configuration now includes Elastic IP, an S3 backend with locking and a pinned-commit bootstrap. Terraform provider initialization still fails under this machine's Windows access controls. **No local provider-schema validation, Terraform plan/apply, remote-state migration or cloud-init execution is claimed.** CI performs provider validation without applying resources. AWS deployment requires reviewed inputs, existing state-bucket permissions, a plan and explicit operator execution; do not create a duplicate server unintentionally.
 
-Docker Desktop's engine is unavailable, so a new container build/start was not run locally. CI retains its container smoke gate and now calls the behavioral endpoint. GitHub CLI configuration access is denied in this session, so these commits require an owner push of `codex/review-hardening`; no new CI run or PR is claimed yet.
+Docker Desktop's engine is unavailable, so a new container build/start was not run locally. CI retains its container smoke gate and now calls the behavioral endpoint. GitHub CLI configuration access is denied in this session, so these commits required an owner push of `codex/review-hardening` at that time; the current combined branch is `codex/server-owned-history`; no new CI run or PR is claimed yet.
 
 ## Remaining model limitations
 

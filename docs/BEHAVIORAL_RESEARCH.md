@@ -20,7 +20,7 @@ Nine features describe amount, 10-minute/hour transaction counts, prior 30-day m
 
 `offline_features` independently selects historical rows with dataframe timestamp masks. `OnlineFeatures` incrementally maintains per-account history. The experiment asserts **exact equality for every feature on every transaction**, not just similar predictions. Tests cover window boundaries, tied timestamps, future-data isolation, retries, conflicting IDs, late events and recovery by replay.
 
-The streaming processor is a single-owner in-memory reference. It rejects late events and retains an unbounded retry map. The stateless behavioral HTTP route uses this processor on supplied history. It is not a durable Kafka consumer or Redis feature store. Before deploying it, implement durable ordering/checkpoints, bounded deduplication, retention, concurrency ownership and load/failure tests. The batch oracle has quadratic work within each account and is for small verification datasets.
+The streaming processor is a single-owner in-memory research reference. The v2.5 HTTP path reconstructs prior history from SQLite, then atomically persists the new event and prediction. HTTP parity, concurrency, rollback and recovery tests cover that stored path. The batch oracle remains independent and quadratic within each account. See [the API contract](BEHAVIORAL_API.md) for ordering, retention and capacity limits.
 
 ## Evaluation contract
 

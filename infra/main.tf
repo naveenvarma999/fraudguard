@@ -78,6 +78,25 @@ resource "aws_vpc_security_group_egress_rule" "outbound" {
   cidr_ipv4         = "0.0.0.0/0"
 }
 
+data "aws_subnet" "app" {
+  id = var.public_subnet_id
+}
+
+resource "aws_ebs_volume" "state" {
+  availability_zone = data.aws_subnet.app.availability_zone
+  size              = 20
+  type              = "gp3"
+  encrypted         = true
+  lifecycle { prevent_destroy = true }
+  tags = { Name = "fraudguard-durable-state" }
+}
+
+resource "aws_volume_attachment" "state" {
+  device_name = "/dev/sdf"
+  volume_id   = aws_ebs_volume.state.id
+  instance_id = aws_instance.app.id
+}
+
 resource "aws_instance" "app" {
   ami                         = var.ubuntu_ami_id
   instance_type               = "t3.small"
@@ -88,8 +107,9 @@ resource "aws_instance" "app" {
   user_data = templatefile("${path.module}/bootstrap.sh.tftpl", {
     source_commit = var.source_commit
     public_ip     = aws_eip.app.public_ip
+    state_volume  = aws_ebs_volume.state.id
   })
-  user_data_replace_on_change = true
+  user_data_replace_on_change = false
 
   metadata_options {
     http_endpoint = "enabled"
@@ -100,7 +120,8 @@ resource "aws_instance" "app" {
     volume_size = 20
     encrypted   = true
   }
-  lifecycle { prevent_destroy = true }
+  # Bootstrap only. Release updates use scripts/Deploy-Checked.sh.
+  lifecycle { ignore_changes = [user_data] }
   tags = { Name = "fraudguard" }
 }
 
@@ -110,3 +131,5 @@ resource "aws_eip_association" "app" {
 }
 
 output "public_ip" { value = aws_eip.app.public_ip }
+
+output "state_volume_id" { value = aws_ebs_volume.state.id }

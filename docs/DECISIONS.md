@@ -58,3 +58,10 @@ These records explain current code and tradeoffs. They are not claims of histori
 **Reason:** recovering our generator's rules is not discovery. The external run challenges the pipeline with different profiles/prevalence while preserving exact feature parity. Undefined cold-start results remain null. One external synthetic run still does not establish production accuracy.
 
 **Cost:** Sparkov remains rule-generated, with only 10 held-out fraud cases. The HTTP endpoint relies on caller-supplied history, without durable ingestion or historical completeness guarantees. These are explicit next validation requirements before production financial use.
+
+
+## 008 — Server-owned history and conservative cold-start review (v2.5)
+
+Supersedes decision 007's caller-supplied-history limitation. Accept only a new event; one SQLite write transaction constructs features from the authenticated owner's stored events, scores and saves all prediction state. Exact retries reuse saved responses; conflicting IDs and late events fail. Single-writer serialization is deliberate, so this release makes no distributed throughput claim. Cold-start events require manual review because threshold-only research missed all cold-start fraud in the six evaluable simulator seeds. This is a workload tradeoff, not an improved model metric.
+
+The deployment keeps durable state and configuration on a protected encrypted EBS volume for newly provisioned hosts. Application updates use the checked deployment script; bootstrap changes are ignored on an existing instance. This infrastructure has not been applied. Existing named-volume installations need a verified backup and explicit migration before enabling storage bindings.

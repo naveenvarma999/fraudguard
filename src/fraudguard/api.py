@@ -28,7 +28,8 @@ from fraudguard.artifacts import load_bundle
 from fraudguard.auth import session_user
 from fraudguard.behavioral_serving import BehavioralRequest
 from fraudguard.behavioral_serving import load_bundle as load_behavioral
-from fraudguard.behavioral_serving import score as behavioral_score
+from fraudguard.behavioral_store import ingest as behavioral_ingest
+from fraudguard.behavioral_store import register_model
 from fraudguard.dashboard import mount_dashboard, prepare_demo
 from fraudguard.data import FEATURES, SCHEMA_VERSION
 from fraudguard.limits import Admission, quota
@@ -184,6 +185,8 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
             if state_dir or os.getenv("STATE_DIR")
             else None
         )
+        if app.state.behavioral is not None and app.state.store is not None:
+            register_model(app.state.store, behavioral_path, app.state.behavioral[1])
         if app.state.pool and not app.state.store:
             raise RuntimeError("Inference workers require a persistent approved model registry")
         app.state.runtime = Runtime(app, app.state.store, release)
@@ -204,7 +207,7 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
 
     app = FastAPI(
         title="FraudGuard",
-        version="2.4.0",
+        version="2.5.0",
         lifespan=lifespan,
         description="Benchmark fraud risk scoring. Review decisions are recommendations.",
     )
@@ -316,6 +319,8 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
 
     @app.post("/v1/behavioral/predict")
     def behavioral_predict(payload: BehavioralRequest, actor=Depends(authorize)):
+        if app.state.store is None:
+            raise HTTPException(503, "Behavioral scoring requires persistent STATE_DIR")
         if app.state.behavioral is None:
             raise HTTPException(503, "Behavioral model is not configured")
         if not slots.acquire(blocking=False):
@@ -329,7 +334,9 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
                     429, "Prediction rate limit reached", headers={"Retry-After": "1"}
                 )
             try:
-                result = behavioral_score(app.state.behavioral, payload)
+                result = behavioral_ingest(
+                    app.state.store, app.state.behavioral, actor["name"], payload
+                )
                 behavioral_predictions.labels(result["decision"]).inc()
                 return result
             except ValueError as exc:

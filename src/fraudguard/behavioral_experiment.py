@@ -276,5 +276,13 @@ def _run(output, seed, accounts, days, data, tracker, export_model):
     if export_model:
         from fraudguard.behavioral_serving import save_bundle
 
-        save_bundle(destination / "model", model, report)
+        reference = {}
+        for name in features.columns:
+            values = features.loc[fit, name].to_numpy()
+            edges = np.unique(np.quantile(values, np.linspace(0.1, 0.9, 9)))
+            reference[name] = {
+                "inner_edges": edges.tolist(),
+                "counts": np.histogram(values, [-np.inf, *edges, np.inf])[0].tolist(),
+            }
+        save_bundle(destination / "model", model, report, reference=reference)
     return report

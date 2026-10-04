@@ -2,21 +2,50 @@
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y docker.io docker-compose-v2 git python3 ca-certificates
+apt-get install -y docker.io docker-compose-v2 git python3 ca-certificates e2fsprogs nvme-cli
 systemctl enable --now docker
 install -d -m 0750 -o ubuntu -g ubuntu /home/ubuntu/fraudguard
 sudo -u ubuntu git clone https://github.com/naveenvarma999/fraudguard.git /home/ubuntu/fraudguard
 sudo -u ubuntu git -C /home/ubuntu/fraudguard checkout --detach '${source_commit}'
 cd /home/ubuntu/fraudguard
+# The attachment resource can finish after cloud-init starts. Identify by EBS ID.
+volume='${state_volume}'
+serial="$${volume//-/}"
+device="/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_$serial"
+for attempt in $(seq 1 120); do
+  [[ -b "$device" ]] && break
+  sleep 5
+done
+[[ -b "$device" ]] || { echo 'Durable EBS attachment not found'; exit 1; }
+# Refuse unknown existing signatures instead of formatting an occupied disk.
+fstype=$(blkid -s TYPE -o value "$device" || true)
+if [[ -z "$fstype" ]]; then
+  [[ -z "$(wipefs --noheadings --output TYPE "$device")" ]] || exit 1
+  mkfs.ext4 "$device"
+elif [[ "$fstype" != ext4 ]]; then
+  echo 'Expected ext4 state volume'; exit 1
+fi
+install -d -m 0750 /srv/fraudguard
+uuid=$(blkid -s UUID -o value "$device")
+printf 'UUID=%s /srv/fraudguard ext4 defaults 0 2\n' "$uuid" >> /etc/fstab
+mount /srv/fraudguard
+chown ubuntu:ubuntu /srv/fraudguard
+chmod 0750 /srv/fraudguard
+install -d -m 0700 -o 10001 -g 10001 /srv/fraudguard/data /srv/fraudguard/backups
+# Persist encryption/API keys alongside the encrypted data, across host replacement.
 umask 077
-python3 - <<'PY'
+if [[ ! -f /srv/fraudguard/app.env ]]; then
+  python3 - <<'PY'
 import secrets
 from pathlib import Path
-Path('.env').write_text('API_KEY=' + secrets.token_urlsafe(32) + '\nPUBLIC_HOST=${public_ip}\n', encoding='utf-8')
+Path('/srv/fraudguard/app.env').write_text('API_KEY=' + secrets.token_urlsafe(32) + '\nPUBLIC_HOST=${public_ip}\n', encoding='utf-8')
 PY
+fi
+ln -s /srv/fraudguard/app.env .env
+touch .storage-enabled
 python3 scripts/configure_security.py
 touch .proxy-enabled
 bash scripts/Deploy-Checked.sh
-chown ubuntu:ubuntu .env
+chown ubuntu:ubuntu /srv/fraudguard/app.env
 # Named users are created by the operator through the private password prompt.
 # Check cloud-init status and external TLS after the EIP association completes.

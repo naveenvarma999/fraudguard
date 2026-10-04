@@ -1,6 +1,6 @@
 # Operations guide
 
-Current application version: **2.4.0**. The original ULB model and a separate authenticated behavioral endpoint are included; see [behavioral API](BEHAVIORAL_API.md). This guide consolidates the 2.1–2.3 operating instructions; historical release notes remain in Git history.
+Current application version: **2.5.0**. The original ULB model and a separate authenticated behavioral endpoint are included; see [behavioral API](BEHAVIORAL_API.md). This guide consolidates the 2.1–2.3 operating instructions; historical release notes remain in Git history.
 
 ## Start locally
 
@@ -31,7 +31,7 @@ On Ubuntu, from `~/fraudguard`, first create a backup with the command below. Se
 sudo bash scripts/Deploy-Checked.sh
 sudo bash scripts/Compose.sh ps
 curl -fsS http://127.0.0.1:8000/health/ready
-sudo bash scripts/Compose.sh exec api python -m fraudguard.deployment --expected-version 2.4.0
+sudo bash scripts/Compose.sh exec api python -m fraudguard.deployment --expected-version 2.5.0
 ```
 
 The script configures missing secrets, builds, waits for health, checks application/model/security/backup contracts and smoke-tests enabled workers. On failure it attempts image rollback; this does not restore the database. Inspect its output and rollback override before exposing traffic. Changes in this repository do not automatically update AWS.
