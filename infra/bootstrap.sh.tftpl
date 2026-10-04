@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y docker.io docker-compose-v2 git python3 ca-certificates
+systemctl enable --now docker
+install -d -m 0750 -o ubuntu -g ubuntu /home/ubuntu/fraudguard
+sudo -u ubuntu git clone https://github.com/naveenvarma999/fraudguard.git /home/ubuntu/fraudguard
+sudo -u ubuntu git -C /home/ubuntu/fraudguard checkout --detach '${source_commit}'
+cd /home/ubuntu/fraudguard
+umask 077
+python3 - <<'PY'
+import secrets
+from pathlib import Path
+Path('.env').write_text('API_KEY=' + secrets.token_urlsafe(32) + '\nPUBLIC_HOST=${public_ip}\n', encoding='utf-8')
+PY
+python3 scripts/configure_security.py
+touch .proxy-enabled
+bash scripts/Deploy-Checked.sh
+chown ubuntu:ubuntu .env
+# Named users are created by the operator through the private password prompt.
+# Check cloud-init status and external TLS after the EIP association completes.

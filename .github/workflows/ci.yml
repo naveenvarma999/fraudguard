@@ -22,6 +22,8 @@ jobs:
       - run: node --test tests/dashboard.test.mjs
       - name: Reproduce behavioral evaluation
         run: fraudguard behavioral-experiment --output artifacts/behavioral-ci --seed 42
+      - name: Assert committed results reproduce
+        run: python -m fraudguard.reproduce --expected artifacts/behavioral/report.json --actual artifacts/behavioral-ci/report.json
       - uses: actions/upload-artifact@v4
         with:
           name: behavioral-evaluation
@@ -38,6 +40,7 @@ jobs:
           curl --fail http://localhost:8000/ > /dev/null
           curl --fail http://localhost:8000/assets/app.mjs > /dev/null
           curl --fail http://localhost:8000/ui/demo > /dev/null
+          curl --fail -H 'X-API-Key: ci-only-key-not-for-production' -H 'Content-Type: application/json' --data @docs/behavioral-request.json http://localhost:8000/v1/behavioral/predict
       - name: Persistent workspace load gate
         env:
           API_KEY: ci-only-key-not-for-production
@@ -48,11 +51,13 @@ jobs:
           name: operations-load-report
           path: artifacts/operations/load_test.json
       - name: Verify deployment contracts
-        run: docker exec fraudguard python -m fraudguard.deployment --expected-version 2.3.0
+        run: docker exec fraudguard python -m fraudguard.deployment --expected-version 2.4.0
       - name: Check Linux deployment script syntax
         run: |
           bash -n scripts/Deploy-Checked.sh
           bash -n scripts/Export-Backup-S3.sh
+          bash -n scripts/Compose.sh
+          bash -n infra/bootstrap.sh.tftpl
   infrastructure:
     runs-on: ubuntu-latest
     steps:

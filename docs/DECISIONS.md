@@ -41,3 +41,20 @@ These records explain current code and tradeoffs. They are not claims of histori
 **Reason:** workers only calculate probabilities for an immutable model version; the coordinator alone saves results. Retrying internal scoring is therefore safe from duplicate database writes.
 
 **Cost:** a client retry after a lost successful API response can duplicate a submission. Workers still share a host/volume and the coordinator is a single point of failure. This is process-level failover, not AWS load balancing or high availability. See `pool.py` and worker tests.
+
+
+## 006 — Isolate login backoff behind an explicit proxy trust boundary
+
+**Decision:** Uvicorn trusts only configured exact proxy IPs. The supplied Caddy deployment has a fixed private address and overwrites X-Forwarded-For. Login backoff keys combine normalized username and resolved client IP, with delays after five attempts capped at 30 seconds. A separate source budget permits 30 attempts/minute, and work is reserved atomically before password hashing.
+
+**Reason:** a global username lock let one source lock out its victim; a proxy-wide source bucket let one source lock out everyone. Tests reproduce both attacks and forged-header evasion. Successful authentication clears only its pair state, not another user's state or the source budget.
+
+**Cost:** people behind the same NAT still share a short source budget. Distributed attacks still require wider abuse monitoring. The container must be deployed with the reviewed proxy configuration; source changes cannot fix an already-running server by themselves.
+
+## 007 — Add independent data and publish uncertainty before stronger claims
+
+**Decision:** keep the internal simulator as a correctness fixture; publish all 11 seed results; independently run upstream Sparkov profiles and export its selected model through a separate authenticated endpoint. Training-time MLflow records both candidate models and failed runs.
+
+**Reason:** recovering our generator's rules is not discovery. The external run challenges the pipeline with different profiles/prevalence while preserving exact feature parity. Undefined cold-start results remain null. One external synthetic run still does not establish production accuracy.
+
+**Cost:** Sparkov remains rule-generated, with only 10 held-out fraud cases. The HTTP endpoint relies on caller-supplied history, without durable ingestion or historical completeness guarantees. These are explicit next validation requirements before production financial use.

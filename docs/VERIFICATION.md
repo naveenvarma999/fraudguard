@@ -1,27 +1,31 @@
-# Verification — 2026-10-04 review upgrade
+# Verification — v2.4 review fixes, 2026-10-04
 
 ## Completed locally
 
-- **92 Python tests passed**, including existing authentication, API, model, backup, worker and deployment-contract tests; new point-in-time/parity/entity-split tests; and a real local SQLite MLflow integration test. There were 16 upstream deprecation warnings, not test failures.
-- **7 JavaScript tests passed**; Ruff and Git whitespace checks passed.
-- Pinned **runtime** dependency audit: **no known vulnerabilities found** by pip-audit 2.10.1. The earlier scan found advisories in Starlette 0.48.0 and cryptography 48.0.1. Runtime pins now use FastAPI 0.142.2, Starlette 1.7.0 and cryptography 50.0.2 with required transitive dependencies. Numerical/model dependencies were preserved.
-- Full seed-42 synthetic run: **10,610 rows**, exact batch/stream feature equality, dataset digest and cohort metrics in [the report](../artifacts/behavioral/report.json). This is synthetic research, not a new production fraud benchmark.
-- Logged the full experiment report, parameters and metrics to a local MLflow SQLite store. The test independently reads back run status, a metric and artifact listing.
-- `terraform fmt -check` passed. Provider initialization failed with a Windows access-denied error while reading the downloaded provider; **Terraform schema validation and plan have not passed locally**. A separate CI validation job is included. No infrastructure was applied.
+- **111 Python tests passed**, with no skips; 16 upstream deprecation warnings remain. Coverage includes proxy/client isolation, targeted login attacks, spoofed forwarding headers, short backoff with a controlled clock, feature/score parity, invalid behavioral history, corrupted bundles, busy-capacity quota preservation, null metrics, reproduction mismatch rejection, and MLflow candidate/failed-run recording.
+- **7 JavaScript tests passed**, Ruff and Git whitespace checks passed.
+- A fresh seed-42 experiment passed the **committed report reproduction assertion**. It checks dataset hash, feature contract, splits, selection, threshold, statuses and metrics; floating-point tolerance is declared in `reproduce.py`.
+- **11 predeclared seeds** completed, with all reports and a mean/range/standard-deviation summary committed. Held-out AP is 0.7798 mean, 0.6598–0.9240 range. No seed was dropped because of its score.
+- **42,925 external Sparkov transactions** were generated using the pinned upstream revision, normalized and used for actual training. Both candidate models were fitted, and every event passed independent batch/stream feature parity. The selected model, report and provenance are committed. See [external-data results](SPARKOV.md).
+- MLflow created a parent training run and two completed candidate child runs with model artifacts and feature schemas. [Tracking evidence](../artifacts/sparkov/tracking-evidence.json) records their IDs/statuses/metrics. Tests additionally verify failed training marks parent and child failed.
+- A local API smoke call loaded the committed Sparkov bundle and returned HTTP 200 from `/v1/behavioral/predict`, application **2.4.0**, model `behavioral-6d94fa3d42458af3`. This used the in-process ASGI client, not Docker or AWS.
+- Runtime dependency audit with pip-audit 2.10.1: **no known vulnerabilities found**. Data-generation and optional tracking environments are separate from that runtime audit.
+- Compose configuration validated with both proxy and worker overlays. Deployment/Compose/bootstrap Bash syntax and Terraform formatting passed.
 
-## External evidence and publishing status
+The first full suite run exposed a wall-clock-dependent assertion in an old login test after introducing a one-second backoff. The test now controls the clock, and the complete suite was rerun successfully. Production delays were not extended merely to make that test pass.
 
-The existing main-branch [validate run](https://github.com/naveenvarma999/fraudguard/actions/runs/36854683519) passed for commit `7cd0c4d`. The corresponding [dependency audit](https://github.com/naveenvarma999/fraudguard/actions/runs/36854683601) failed. These are **pre-upgrade runs**, not evidence that this branch passed GitHub Actions. README badges track main truthfully; they may remain red until the fixes are pushed, reviewed and merged.
+## Live deployment check
 
-The public HTTPS readiness and fixed-sample demo endpoints responded on 2026-10-04. The serving model reported `20260928T033102Z-76274b69`. This does not prove that every local UI change is deployed. The new research track has not been deployed.
+On 2026-10-04, HTTPS requests to the public readiness and OpenAPI endpoints succeeded with certificate verification enabled using standard certifi roots. The live application reported **2.3.0**, and readiness returned `ready`. No certificate checks were bypassed. This verifies reachability from this environment, not every reviewer's network.
 
-This session could not access saved GitHub authentication; a noninteractive branch push failed asking for a username. New commits remain local until the owner pushes `codex/behavioral-features`. No PR was created and no GitHub Actions result is claimed for these changes.
+**The v2.4 changes are local, not deployed to AWS.** The existing server was not modified. Before rollout, review the trusted-proxy migration in [operations](OPERATIONS.md); the login fix requires correct deployment configuration as well as updated code.
 
-Docker Desktop's engine was unavailable, so **a fresh container build/start was not verified locally**. The existing CI container smoke test remains required before deployment. AWS, real external alert delivery and off-host S3 recovery were not modified or retested.
+## Infrastructure and publishing limits
 
-## Review and release checklist
+The EC2 configuration now includes Elastic IP, an S3 backend with locking and a pinned-commit bootstrap. Terraform provider initialization still fails under this machine's Windows access controls. **No local provider-schema validation, Terraform plan/apply, remote-state migration or cloud-init execution is claimed.** CI performs provider validation without applying resources. AWS deployment requires reviewed inputs, existing state-bucket permissions, a plan and explicit operator execution; do not create a duplicate server unintentionally.
 
-1. Push `codex/behavioral-features` and open a PR to `main`; inspect both validation and dependency-audit results.
-2. Review the synthetic generator assumptions, cohort sizes, cold-start metric and five decision records. Do not describe this as real-bank training data or distributed real-time serving.
-3. Review the dependency changes with the CI container smoke result before upgrading AWS. Preserve secrets, accounts and volumes; follow [operations](OPERATIONS.md).
-4. Treat Terraform as a separate reviewed infrastructure reference. Do not apply it to the existing instance without a resource-import plan.
+Docker Desktop's engine is unavailable, so a new container build/start was not run locally. CI retains its container smoke gate and now calls the behavioral endpoint. GitHub CLI configuration access is denied in this session, so these commits require an owner push of `codex/review-hardening`; no new CI run or PR is claimed yet.
+
+## Remaining model limitations
+
+Both data sources are synthetic. The internal generator deliberately links behavior and fraud, and its high prevalence limits review-budget recall. Sparkov uses independent profiles but remains rule-generated; only 10 held-out test events are fraud. The 11-seed uncertainty summary applies to the internal simulator, not multiple Sparkov generations. Real-world calibration, dataset shift, durable event ingestion/history completeness, full cloud recovery and multi-host availability remain unproven.

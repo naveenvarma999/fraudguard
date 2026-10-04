@@ -1,5 +1,6 @@
 terraform {
-  required_version = ">= 1.6, < 2.0"
+  backend "s3" {}
+  required_version = ">= 1.10, < 2.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -32,6 +33,20 @@ variable "ssh_cidr" {
     condition     = can(cidrnetmask(var.ssh_cidr)) && endswith(var.ssh_cidr, "/32")
     error_message = "SSH must be limited to one IPv4 address (/32)."
   }
+}
+
+variable "source_commit" {
+  type        = string
+  description = "Reviewed 40-character Git commit SHA to deploy; never a moving branch."
+  validation {
+    condition     = can(regex("^[0-9a-f]{40}$", var.source_commit))
+    error_message = "Provide a full reviewed Git commit SHA."
+  }
+}
+
+resource "aws_eip" "app" {
+  domain = "vpc"
+  lifecycle { prevent_destroy = true }
 }
 
 resource "aws_security_group" "app" {
@@ -70,6 +85,11 @@ resource "aws_instance" "app" {
   key_name                    = var.key_pair_name
   vpc_security_group_ids      = [aws_security_group.app.id]
   associate_public_ip_address = true
+  user_data = templatefile("${path.module}/bootstrap.sh.tftpl", {
+    source_commit = var.source_commit
+    public_ip     = aws_eip.app.public_ip
+  })
+  user_data_replace_on_change = true
 
   metadata_options {
     http_endpoint = "enabled"
@@ -84,4 +104,9 @@ resource "aws_instance" "app" {
   tags = { Name = "fraudguard" }
 }
 
-output "public_ip" { value = aws_instance.app.public_ip }
+resource "aws_eip_association" "app" {
+  instance_id   = aws_instance.app.id
+  allocation_id = aws_eip.app.id
+}
+
+output "public_ip" { value = aws_eip.app.public_ip }
