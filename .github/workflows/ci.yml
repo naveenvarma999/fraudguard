@@ -13,12 +13,19 @@ jobs:
           cache: pip
       - run: pip install -r requirements.lock -r requirements-dev.txt
       - run: pip install --no-deps -e .
+      - run: pip install '.[tracking]' -c requirements.lock
       - run: ruff check .
       - run: pytest -q
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: node --test tests/dashboard.test.mjs
+      - name: Reproduce behavioral evaluation
+        run: fraudguard behavioral-experiment --output artifacts/behavioral-ci --seed 42
+      - uses: actions/upload-artifact@v4
+        with:
+          name: behavioral-evaluation
+          path: artifacts/behavioral-ci/report.json
       - run: docker build -t fraudguard:test .
       - name: Container readiness smoke test
         run: |
@@ -46,3 +53,13 @@ jobs:
         run: |
           bash -n scripts/Deploy-Checked.sh
           bash -n scripts/Export-Backup-S3.sh
+  infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.16.1'
+      - run: terraform -chdir=infra fmt -check
+      - run: terraform -chdir=infra init -backend=false -input=false
+      - run: terraform -chdir=infra validate
