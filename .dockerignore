@@ -10,6 +10,7 @@ __pycache__
 .ruff_cache
 artifacts/*
 !artifacts/benchmark
+!artifacts/behavioral_service
 
 state/
 *.sqlite3*
