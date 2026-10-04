@@ -1,0 +1,16 @@
+# New Terraform deployments only. Existing named volumes require an explicit migration.
+volumes:
+  workspace_data:
+    name: fraudguard_durable_workspace
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/fraudguard/data
+  backup_data:
+    name: fraudguard_durable_backups
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/fraudguard/backups

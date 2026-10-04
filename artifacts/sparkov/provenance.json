@@ -1,0 +1,17 @@
+{
+  "source": "https://github.com/namebrandon/Sparkov_Data_Generation",
+  "revision": "b5eb45c89d36f2aa4ef16044a42945bed8b96d93",
+  "seed": 42,
+  "customers": 100,
+  "period": [
+    "2024-01-01",
+    "2024-07-01"
+  ],
+  "faker": "13.12.0",
+  "numpy": "2.3.3",
+  "generation": "Sequential original profiles; frozen customer date; UTC timestamp normalization",
+  "dataset_sha256": "8b15dba5db1d1126ddb05b5c32369f503a9fbd891189360ea211f9bf1be88096",
+  "rows": 42925,
+  "fraud_rate": 0.02227140361094933,
+  "limitations": "External synthetic generator, not real bank data. A fixed 2-day label delay is simulated, not supplied by Sparkov."
+}

@@ -234,6 +234,9 @@ def mount_workspace(app, authorize, monitor_authorize):
         with store().connect() as db:
             db.execute("BEGIN")
             record = dict(owned(db, identifier, actor))
+            behavioral = db.execute(
+                "SELECT response FROM behavioral_events WHERE prediction_id=?", (identifier,)
+            ).fetchone()
             label = db.execute(
                 "SELECT fraud,source,actor,at FROM labels WHERE prediction_id=?", (identifier,)
             ).fetchone()
@@ -246,6 +249,7 @@ def mount_workspace(app, authorize, monitor_authorize):
             ]
         return {
             "prediction": record,
+            "behavioral": json.loads(behavioral[0]) if behavioral else None,
             "label": dict(label) if label else None,
             "events": events[:50],
             "next_before": events[49]["id"] if len(events) > 50 else None,
@@ -334,6 +338,19 @@ def mount_workspace(app, authorize, monitor_authorize):
             manifest = app.state.manifest
             return {
                 "model_version": manifest["run_id"],
+                "behavioral": {
+                    "model_version": app.state.behavioral[1]["version"],
+                    "quality": quality(store(), app.state.behavioral[1]["version"], days),
+                    "drift": drift(
+                        store(),
+                        {**app.state.behavioral[1], "run_id": app.state.behavioral[1]["version"]},
+                        days,
+                    )
+                    if app.state.behavioral[1].get("reference")
+                    else {"status": "reference_not_available"},
+                }
+                if app.state.behavioral
+                else None,
                 "workers": app.state.pool.status() if app.state.pool else [],
                 "drift": drift(store(), manifest, days),
                 "quality": quality(store(), manifest["run_id"], days),

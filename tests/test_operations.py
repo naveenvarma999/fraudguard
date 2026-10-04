@@ -51,7 +51,20 @@ def test_insufficient_evidence_and_alert_lifecycle(tmp_path):
         "drift": {"status": "insufficient_samples", "max_psi": None},
         "quality": {"status": "insufficient_labels"},
     }
+    snapshot["behavioral"] = {
+        "drift": {"status": "insufficient_samples"},
+        "quality": {"status": "insufficient_labels"},
+    }
     conditions = alert_conditions(snapshot)
+    assert not conditions["behavioral_feature_drift"][0]
+    assert not conditions["behavioral_low_recall"][0]
+    snapshot["behavioral"] = {
+        "drift": {"status": "measured", "max_psi": 0.3},
+        "quality": {"status": "measured", "recall": 0.4},
+    }
+    measured = alert_conditions(snapshot)
+    assert measured["behavioral_feature_drift"][0]
+    assert measured["behavioral_low_recall"][0]
     assert not conditions["feature_drift"][0] and not conditions["low_recall"][0]
     update_alerts(store, conditions)
     assert not any(a["active"] for a in store.query("SELECT * FROM alerts"))

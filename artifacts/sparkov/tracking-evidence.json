@@ -1,0 +1,78 @@
+{
+  "backend": "local SQLite (not published)",
+  "runs": [
+    {
+      "run_id": "e36907918a4342a6b717ee75846a2a78",
+      "status": "FINISHED",
+      "started_ms": 1791122962302,
+      "ended_ms": 1791122962902,
+      "candidate": "histogram_gbm",
+      "parent": "0608497f8c5149ad95ee9156b8c822d4",
+      "metrics": {
+        "selection.average_precision": 0.7284023953424695
+      },
+      "model_artifacts": [
+        "model/features.json",
+        "model/model.joblib"
+      ]
+    },
+    {
+      "run_id": "a62e181bc8c645b3aff170c5eb3f563d",
+      "status": "FINISHED",
+      "started_ms": 1791122962006,
+      "ended_ms": 1791122962293,
+      "candidate": "logistic",
+      "parent": "0608497f8c5149ad95ee9156b8c822d4",
+      "metrics": {
+        "selection.average_precision": 0.34708385385948837
+      },
+      "model_artifacts": [
+        "model/features.json",
+        "model/model.joblib"
+      ]
+    },
+    {
+      "run_id": "0608497f8c5149ad95ee9156b8c822d4",
+      "status": "FINISHED",
+      "started_ms": 1791122917380,
+      "ended_ms": 1791122964574,
+      "candidate": "stylish-mule-471",
+      "parent": null,
+      "metrics": {
+        "test_seen.rows": 8213.0,
+        "test_seen.fraud_cases": 133.0,
+        "test_seen.average_precision": 0.593022825628541,
+        "test_seen.precision": 0.2905982905982906,
+        "test_seen.recall": 0.7669172932330827,
+        "test_seen.review_rate": 0.042737124071593816,
+        "test_seen.fraud_rate": 0.01619383903567515,
+        "test_unseen.rows": 2819.0,
+        "test_unseen.fraud_cases": 10.0,
+        "test_unseen.average_precision": 0.6383719673473771,
+        "test_unseen.precision": 0.09523809523809523,
+        "test_unseen.recall": 0.8,
+        "test_unseen.review_rate": 0.0297978006385243,
+        "test_unseen.fraud_rate": 0.0035473572188719402,
+        "unseen_first_event_no_history.rows": 21.0,
+        "unseen_first_event_no_history.fraud_cases": 0.0,
+        "unseen_first_event_no_history.review_rate": 0.19047619047619047,
+        "unseen_first_event_no_history.fraud_rate": 0.0,
+        "amount_only_test_unseen.rows": 2819.0,
+        "amount_only_test_unseen.fraud_cases": 10.0,
+        "amount_only_test_unseen.average_precision": 0.10924378252331397,
+        "amount_only_test_unseen.precision": 0.06363636363636363,
+        "amount_only_test_unseen.recall": 0.7,
+        "amount_only_test_unseen.review_rate": 0.039020929407591345,
+        "amount_only_test_unseen.fraud_rate": 0.0035473572188719402,
+        "random_split_diagnostic.rows": 8585.0,
+        "random_split_diagnostic.fraud_cases": 191.0,
+        "random_split_diagnostic.average_precision": 0.7434982860741259,
+        "random_split_diagnostic.precision": 0.40253164556962023,
+        "random_split_diagnostic.recall": 0.8324607329842932,
+        "random_split_diagnostic.review_rate": 0.046010483401281305,
+        "random_split_diagnostic.fraud_rate": 0.022248107163657542
+      },
+      "model_artifacts": []
+    }
+  ]
+}

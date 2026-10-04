@@ -32,6 +32,9 @@ def main():
     behavioral.add_argument("--seed", type=int, default=42)
     behavioral.add_argument("--accounts", type=int, default=100)
     behavioral.add_argument("--days", type=int, default=60)
+    behavioral.add_argument("--data", help="Normalized external Sparkov CSV")
+    behavioral.add_argument("--tracking-uri")
+    behavioral.add_argument("--export-model", action="store_true")
     for name in ("score", "monitor", "evaluate"):
         sub = commands.add_parser(name)
         sub.add_argument("--data", required=True)
@@ -41,7 +44,15 @@ def main():
     if args.command == "behavioral-experiment":
         from fraudguard.behavioral_experiment import run
 
-        report = run(args.output, args.seed, args.accounts, args.days)
+        report = run(
+            args.output,
+            args.seed,
+            args.accounts,
+            args.days,
+            args.data,
+            args.tracking_uri,
+            args.export_model,
+        )
         print(json.dumps(report, indent=2))
     elif args.command == "download":
         print(json.dumps(download(args.output), indent=2))

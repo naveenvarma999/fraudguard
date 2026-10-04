@@ -1,6 +1,7 @@
 """Password hashing and expiring, revocable bearer sessions."""
 
 import hashlib
+import math
 import secrets
 import threading
 import time
@@ -50,20 +51,42 @@ def add_user(store, username, password, role, actor="operator"):
 
 def login(store, username, password, address, otp=""):
     now = time.time()
-    # Use the direct connection address, never trust arbitrary forwarded headers.
-    buckets = [(f"user:{username.lower()}", 5), (f"ip:{address}", 30)]
+    # request.client is resolved only by the explicitly trusted Uvicorn proxy.
+    pair = "login-pair:" + hashlib.sha256(f"{username.lower()}\0{address}".encode()).hexdigest()
+    source = "login-source:" + address
     with store.connect() as db:
         db.execute("BEGIN IMMEDIATE")
         db.execute("DELETE FROM attempts WHERE started<?", (now - 600,))
-        for bucket, limit in buckets:
-            row = db.execute("SELECT count FROM attempts WHERE bucket=?", (bucket,)).fetchone()
-            if row and row["count"] >= limit:
-                raise HTTPException(429, "Too many login attempts. Wait ten minutes.")
-        for bucket, _ in buckets:
-            db.execute(
-                "INSERT INTO attempts VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET count=count+1",
-                (bucket, now),
+        previous = db.execute(
+            "SELECT count,started FROM attempts WHERE bucket=?", (pair,)
+        ).fetchone()
+        if previous and previous["count"] >= 5:
+            delay = min(30, 2 ** min(previous["count"] - 5, 5))
+            wait = math.ceil(previous["started"] + delay - now)
+            if wait > 0:
+                raise HTTPException(
+                    429,
+                    "Login retry delayed for this account and source.",
+                    headers={"Retry-After": str(wait)},
+                )
+        ip = db.execute("SELECT count,started FROM attempts WHERE bucket=?", (source,)).fetchone()
+        if ip and ip["started"] > now - 60 and ip["count"] >= 30:
+            raise HTTPException(
+                429,
+                "Login rate limit for this source.",
+                headers={"Retry-After": str(max(1, math.ceil(ip["started"] + 60 - now)))},
             )
+        if ip and ip["started"] <= now - 60:
+            db.execute("DELETE FROM attempts WHERE bucket=?", (source,))
+        # Reserve before hashing so concurrent requests cannot bypass the limit.
+        db.execute(
+            "INSERT INTO attempts VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET count=count+1,started=excluded.started",
+            (pair, now),
+        )
+        db.execute(
+            "INSERT INTO attempts VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET count=count+1",
+            (source, now),
+        )
     users = store.query("SELECT * FROM users WHERE name=?", (username,))
     user = users[0] if users else None
     stored = user["password"] if user else DUMMY
@@ -74,6 +97,8 @@ def login(store, username, password, address, otp=""):
         raise HTTPException(401, "Invalid username or password")
     configured = bool(store.query("SELECT 1 FROM mfa WHERE username=?", (username,)))
     if not configured and mfa.required():
+        with store.connect() as db:
+            db.execute("DELETE FROM attempts WHERE bucket=?", (pair,))
         return mfa.challenge(store, username)
     if configured:
         with store.connect() as db:
@@ -83,6 +108,8 @@ def login(store, username, password, address, otp=""):
                 store.audit(db, username, "mfa.failed")
         if not verified:
             raise HTTPException(401, "Invalid or previously used authenticator/recovery code")
+    with store.connect() as db:
+        db.execute("DELETE FROM attempts WHERE bucket=?", (pair,))
     return issue_session(store, username, user["role"], now)
 
 

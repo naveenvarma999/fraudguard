@@ -40,7 +40,12 @@ CREATE TABLE IF NOT EXISTS quotas(bucket TEXT PRIMARY KEY,tokens REAL NOT NULL,u
 CREATE TABLE IF NOT EXISTS mfa(username TEXT PRIMARY KEY REFERENCES users(name),secret TEXT NOT NULL,last_step INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS recovery_codes(username TEXT REFERENCES users(name),digest TEXT NOT NULL,PRIMARY KEY(username,digest));
 CREATE TABLE IF NOT EXISTS enrollments(token TEXT PRIMARY KEY,username TEXT REFERENCES users(name),expires REAL NOT NULL,secret TEXT,attempts INTEGER NOT NULL);
-PRAGMA user_version=3;
+CREATE TABLE IF NOT EXISTS behavioral_models(version TEXT PRIMARY KEY,manifest TEXT NOT NULL,artifact BLOB NOT NULL);
+CREATE TABLE IF NOT EXISTS behavioral_accounts(owner TEXT NOT NULL,account TEXT NOT NULL,timestamp INTEGER NOT NULL,event_id TEXT NOT NULL,PRIMARY KEY(owner,account));
+CREATE TABLE IF NOT EXISTS behavioral_events(owner TEXT NOT NULL,event_id TEXT NOT NULL,account TEXT NOT NULL,
+ timestamp INTEGER NOT NULL,raw TEXT NOT NULL,response TEXT NOT NULL,prediction_id TEXT NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,PRIMARY KEY(owner,event_id));
+CREATE INDEX IF NOT EXISTS behavioral_account_time ON behavioral_events(owner,account,timestamp,event_id);
+PRAGMA user_version=4;
 """
 
 
@@ -141,6 +146,8 @@ class Store:
             raise ValueError("Retention must be at least 7 days")
         cutoff = time.time() - days * 86400
         with self.connect() as db:
+            if days < 30 and db.execute("SELECT 1 FROM behavioral_events LIMIT 1").fetchone():
+                raise ValueError("Behavioral history requires at least 30 days of retention")
             deleted = db.execute("DELETE FROM predictions WHERE at<?", (cutoff,)).rowcount
             db.execute("DELETE FROM bins WHERE hour<?", (int(cutoff // 3600),))
             db.execute("DELETE FROM sessions WHERE expires<?", (time.time(),))

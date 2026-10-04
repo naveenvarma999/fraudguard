@@ -1,0 +1,11 @@
+{
+  "transaction": {
+    "event_id": "event-3",
+    "account_id": "demo-account",
+    "merchant_id": "new-shop",
+    "timestamp": 1700000701,
+    "amount": 80.0,
+    "latitude": 52.0,
+    "longitude": 1.0
+  }
+}

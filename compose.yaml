@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    image: fraudguard-api:2.3.0
+    image: fraudguard-api:2.5.0
     ports:
       - "127.0.0.1:8000:8000"
     environment:
@@ -9,6 +9,7 @@ services:
       MONITOR_KEY: ${MONITOR_KEY:?Set a separate random MONITOR_KEY}
       MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?Run scripts/configure_security.py first}
       REQUIRE_MFA: "true"
+      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
       MODEL_DIR: /app/artifacts/benchmark
       STATE_DIR: ${FRAUDGUARD_STATE_DIR:-/data}
     volumes:
@@ -30,7 +31,7 @@ services:
 
   monitor:
     build: .
-    image: fraudguard-api:2.3.0
+    image: fraudguard-api:2.5.0
     command: ["python", "-m", "fraudguard.watchdog"]
     environment:
       MONITOR_KEY: ${MONITOR_KEY:?Set MONITOR_KEY}

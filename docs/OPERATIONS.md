@@ -1,6 +1,6 @@
 # Operations guide
 
-Current application version: **2.3.0**. Behavioral research is an offline addition and does not replace the serving model. This guide consolidates the 2.1–2.3 operating instructions; historical release notes remain in Git history.
+Current application version: **2.5.0**. The original ULB model and a separate authenticated behavioral endpoint are included; see [behavioral API](BEHAVIORAL_API.md). This guide consolidates the 2.1–2.3 operating instructions; historical release notes remain in Git history.
 
 ## Start locally
 
@@ -31,7 +31,7 @@ On Ubuntu, from `~/fraudguard`, first create a backup with the command below. Se
 sudo bash scripts/Deploy-Checked.sh
 sudo bash scripts/Compose.sh ps
 curl -fsS http://127.0.0.1:8000/health/ready
-sudo bash scripts/Compose.sh exec api python -m fraudguard.deployment --expected-version 2.3.0
+sudo bash scripts/Compose.sh exec api python -m fraudguard.deployment --expected-version 2.5.0
 ```
 
 The script configures missing secrets, builds, waits for health, checks application/model/security/backup contracts and smoke-tests enabled workers. On failure it attempts image rollback; this does not restore the database. Inspect its output and rollback override before exposing traffic. Changes in this repository do not automatically update AWS.
@@ -45,12 +45,12 @@ Keep SSH restricted to your public IP, expose 80/443 through Caddy, and keep 800
 | Per-account prediction bucket | 60 requests; refill 1/second |
 | Per-account transaction bucket | 3,000; refill 50/second |
 | Process admission bucket | 120 requests; refill 60/second; health excluded |
-| Login failures | 5/username and 30/direct peer per 10 minutes |
+| Login failures | After 5 attempts: 1–30 second backoff per username + client IP; 30 requests/source/minute |
 | Coordinator concurrency | Four batches |
 | Worker concurrency | Two batches each |
 | Prediction payload | 100 transactions, 256 KiB |
 
-Account budgets persist in SQLite. The process bucket resets on restart. Quotas can be charged for admitted predictions that later fail. Respect 429/503 `Retry-After` and back off. These limits do not provide network DDoS protection; users behind Caddy can share the direct-peer login limit.
+Account budgets persist in SQLite. The process bucket resets on restart. Busy local-capacity rejection happens before quota debit. Admitted predictions that fail afterward (including remote worker failure) can still consume quota. Respect 429/503 `Retry-After` and back off. These limits do not provide network DDoS protection; clients sharing a NAT still share the one-minute source limit; configure the trusted proxy below to avoid grouping every visitor behind Caddy.
 
 Create `.workers-enabled` then rerun the checked deployment to enable two private scoring workers. Always use `scripts/Compose.sh` afterward so overrides stay applied. Least-busy routing, failure exclusion and read-only retries are explained in [decision 005](DECISIONS.md). Check history after a lost API response before resubmitting.
 
@@ -81,3 +81,13 @@ After fixing a receiver, `python -m fraudguard.admin retry-alerts` in the monito
 The UI provides scoped overview counts, transaction timelines, upload validation and an explanatory interactive system flow. It does not display live distributed traffic or model accuracy merely from readiness. Public demo data are fixed samples; private uploads require authentication.
 
 The test and audit badges in the README reflect GitHub runs. Local results and research measurements are in [verification](VERIFICATION.md). Docker runtime, AWS rollout, receiver delivery and S3 recovery need separate environment-specific evidence; passing Python tests does not prove them.
+
+## Trusted proxy configuration for the login fix
+
+The API trusts **no** forwarding headers unless `TRUSTED_PROXY_IPS` lists exact proxy IP addresses. Wildcards, hostnames and whole-network ranges are rejected by the container entry point. Do not set it to `*` or trust the whole Docker subnet. Keep port 8000 bound to loopback, and have Caddy overwrite `X-Forwarded-For` with its direct client's address.
+
+For a new deployment, set `PUBLIC_HOST` in `.env` and create `.proxy-enabled`. The supplied `compose.proxy.yaml` assigns Caddy `172.30.80.2`, configures API trust for only that address and uses `ops/Caddyfile` to overwrite the header. Check subnet conflicts before use. The Compose wrapper and checked deployment include this file. They refuse to combine it with an existing `compose.override.yaml` without operator review.
+
+For an existing Caddy deployment, inspect its network configuration first, assign a stable address, set that exact address in `.env` as `TRUSTED_PROXY_IPS`, and add `header_up X-Forwarded-For {remote_host}` inside its `reverse_proxy` block. Recreate the API through the checked deployment and verify login from two clients. Do not merely add a second Caddy container on ports 80/443. A host-native Caddy may reach the API through a Docker gateway address; that topology needs separate review before trusting it.
+
+Uvicorn resolves the trusted proxy header into `request.client` ([official settings](https://www.uvicorn.org/settings/)). The login code does not parse arbitrary headers itself. The regression suite simulates a trusted Caddy peer, independent clients, random-username attacks, targeted account attacks and direct spoofed headers.

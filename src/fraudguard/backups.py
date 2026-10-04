@@ -62,6 +62,13 @@ def validate_snapshot(folder):
                 raise ValueError("Invalid registry identifier")
             if bundle_digest(folder / "releases" / row["id"]) != row["digest"]:
                 raise ValueError("Backup registry checksum mismatch")
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='behavioral_models'").fetchone():
+            for row in db.execute("SELECT manifest,artifact FROM behavioral_models"):
+                if (
+                    hashlib.sha256(row["artifact"]).hexdigest()
+                    != json.loads(row["manifest"])["model_sha256"]
+                ):
+                    raise ValueError("Backup behavioral model checksum mismatch")
         active = db.execute("SELECT value FROM settings WHERE key='active_release'").fetchone()
         if (
             active

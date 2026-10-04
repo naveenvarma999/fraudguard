@@ -1,0 +1,6 @@
+# Existing private, versioned bucket. Never put AWS access keys here.
+bucket       = "YOUR-EXISTING-TERRAFORM-STATE-BUCKET"
+key          = "fraudguard/production.tfstate"
+region       = "eu-west-2"
+encrypt      = true
+use_lockfile = true
