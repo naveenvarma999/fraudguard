@@ -6,7 +6,7 @@ services:
       INFERENCE_KEY: ${INFERENCE_KEY:?Run scripts/configure_security.py}
     mem_limit: 512m
   worker-a: &worker
-    image: fraudguard-api:2.3.0
+    image: fraudguard-api:2.4.0
     command: ["uvicorn", "fraudguard.worker:create_worker", "--factory", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--limit-concurrency", "8", "--no-access-log"]
     environment:
       INFERENCE_KEY: ${INFERENCE_KEY:?Run scripts/configure_security.py}

@@ -21,6 +21,7 @@ compose.rollback.yaml
 .backup-env
 
 .workers-enabled
+.proxy-enabled
 
 # Never publish credentials or local deployment overrides
 .env.*
@@ -38,3 +39,5 @@ mlflow.db*
 *.tfplan
 *.tfvars
 !*.tfvars.example
+
+infra/backend.hcl

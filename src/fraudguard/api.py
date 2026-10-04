@@ -26,6 +26,9 @@ from threadpoolctl import threadpool_limits
 from fraudguard import mfa
 from fraudguard.artifacts import load_bundle
 from fraudguard.auth import session_user
+from fraudguard.behavioral_serving import BehavioralRequest
+from fraudguard.behavioral_serving import load_bundle as load_behavioral
+from fraudguard.behavioral_serving import score as behavioral_score
 from fraudguard.dashboard import mount_dashboard, prepare_demo
 from fraudguard.data import FEATURES, SCHEMA_VERSION
 from fraudguard.limits import Admission, quota
@@ -118,6 +121,12 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
     predictions = Counter(
         "fraudguard_predictions_total", "Scored transactions", ["decision"], registry=registry
     )
+    behavioral_predictions = Counter(
+        "fraudguard_behavioral_predictions_total",
+        "Scored behavioral events",
+        ["decision"],
+        registry=registry,
+    )
     requests = Counter(
         "fraudguard_requests_total", "Prediction requests", ["status"], registry=registry
     )
@@ -164,6 +173,10 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
             if worker_key in (key, monitor_secret):
                 raise RuntimeError("INFERENCE_KEY must be distinct from public and monitoring keys")
             app.state.pool = Pool(urls, worker_key)
+        app.state.behavioral = None
+        behavioral_path = Path(os.getenv("BEHAVIORAL_MODEL_DIR", "artifacts/behavioral_service"))
+        if behavioral_path.exists() or os.getenv("BEHAVIORAL_MODEL_DIR"):
+            app.state.behavioral = load_behavioral(behavioral_path)
         app.state.model = None
         app.state.demo = None
         app.state.store = (
@@ -191,11 +204,12 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
 
     app = FastAPI(
         title="FraudGuard",
-        version="2.3.0",
+        version="2.4.0",
         lifespan=lifespan,
         description="Benchmark fraud risk scoring. Review decisions are recommendations.",
     )
     app.add_middleware(BodyLimitMiddleware)
+    app.state.inference_slots = slots
     mount_dashboard(app, release)
 
     def authorize(
@@ -245,12 +259,12 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
             else:
                 response = await call_next(request)
         except Exception:
-            if request.url.path == "/v1/predict":
+            if request.url.path in ("/v1/predict", "/v1/behavioral/predict"):
                 app.state.telemetry.record(500, time.perf_counter() - started)
             raise
-        if request.url.path == "/v1/predict":
+        if request.url.path in ("/v1/predict", "/v1/behavioral/predict"):
             app.state.telemetry.record(response.status_code, time.perf_counter() - started)
-        if request.url.path == "/v1/predict":
+        if request.url.path in ("/v1/predict", "/v1/behavioral/predict"):
             requests.labels(str(response.status_code)).inc()
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -294,13 +308,39 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
     def prometheus_metrics():
         return Response(generate_latest(registry), headers={"Content-Type": CONTENT_TYPE_LATEST})
 
+    @app.get("/v1/behavioral/model", dependencies=[Depends(authorize)])
+    def behavioral_info():
+        if app.state.behavioral is None:
+            raise HTTPException(503, "Behavioral model is not configured")
+        return app.state.behavioral[1]
+
+    @app.post("/v1/behavioral/predict")
+    def behavioral_predict(payload: BehavioralRequest, actor=Depends(authorize)):
+        if app.state.behavioral is None:
+            raise HTTPException(503, "Behavioral model is not configured")
+        if not slots.acquire(blocking=False):
+            raise HTTPException(503, "Inference capacity busy", headers={"Retry-After": "1"})
+        started = time.perf_counter()
+        try:
+            if app.state.store:
+                quota(app.state.store, actor["name"], 1)
+            elif not stateless_quota.take():
+                raise HTTPException(
+                    429, "Prediction rate limit reached", headers={"Retry-After": "1"}
+                )
+            try:
+                result = behavioral_score(app.state.behavioral, payload)
+                behavioral_predictions.labels(result["decision"]).inc()
+                return result
+            except ValueError as exc:
+                raise HTTPException(422, str(exc)) from None
+        finally:
+            latency.observe(time.perf_counter() - started)
+            slots.release()
+
     @app.post("/v1/predict", response_model=PredictionResponse, response_model_exclude_none=True)
     def predict(payload: PredictionRequest, actor=Depends(authorize)):
         ready()
-        if app.state.store:
-            quota(app.state.store, actor["name"], len(payload.transactions))
-        elif not stateless_quota.take():
-            raise HTTPException(429, "Prediction rate limit reached", headers={"Retry-After": "1"})
         if not slots.acquire(blocking=False):
             raise HTTPException(
                 status_code=503,
@@ -309,6 +349,12 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
             )
         started = time.perf_counter()
         try:
+            if app.state.store:
+                quota(app.state.store, actor["name"], len(payload.transactions))
+            elif not stateless_quota.take():
+                raise HTTPException(
+                    429, "Prediction rate limit reached", headers={"Retry-After": "1"}
+                )
             with app.state.runtime.lock:
                 model, manifest = app.state.model, app.state.manifest
                 version = manifest["run_id"]

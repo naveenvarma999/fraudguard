@@ -1,0 +1,23 @@
+{
+  "schema": "behavioral-v1",
+  "features": [
+    "log_amount",
+    "transactions_10m",
+    "transactions_1h",
+    "mean_amount_30d",
+    "amount_to_mean_30d",
+    "new_merchant_30d",
+    "distance_from_previous_km",
+    "history_count_30d",
+    "cold_start"
+  ],
+  "model_sha256": "6d94fa3d42458af38256f3c76f81761223b71785388d3da836dd1b3ca2c81f21",
+  "version": "behavioral-6d94fa3d42458af3",
+  "threshold": 0.06489470465770421,
+  "dataset": "Sparkov external synthetic normalized dataset",
+  "dataset_sha256": "8b15dba5db1d1126ddb05b5c32369f503a9fbd891189360ea211f9bf1be88096",
+  "seed": 42,
+  "score_kind": "uncalibrated",
+  "history_source": "caller-supplied",
+  "model_type": "histogram_gbm"
+}
