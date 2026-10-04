@@ -25,13 +25,25 @@ def main():
     fit.add_argument("--max-review-rate", type=float, default=0.01)
     fit.add_argument("--review-cost", type=float, default=2.0)
     fit.add_argument("--missed-cost", type=float, default=100.0)
+    behavioral = commands.add_parser(
+        "behavioral-experiment", help="Synthetic point-in-time feature experiment (research only)"
+    )
+    behavioral.add_argument("--output", required=True)
+    behavioral.add_argument("--seed", type=int, default=42)
+    behavioral.add_argument("--accounts", type=int, default=100)
+    behavioral.add_argument("--days", type=int, default=60)
     for name in ("score", "monitor", "evaluate"):
         sub = commands.add_parser(name)
         sub.add_argument("--data", required=True)
         sub.add_argument("--model-dir", required=True)
         sub.add_argument("--output", required=True)
     args = parser.parse_args()
-    if args.command == "download":
+    if args.command == "behavioral-experiment":
+        from fraudguard.behavioral_experiment import run
+
+        report = run(args.output, args.seed, args.accounts, args.days)
+        print(json.dumps(report, indent=2))
+    elif args.command == "download":
         print(json.dumps(download(args.output), indent=2))
     elif args.command == "train":
         from fraudguard.training import train
