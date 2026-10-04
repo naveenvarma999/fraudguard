@@ -114,8 +114,10 @@ def test_password_change_revokes_all_sessions(workspace):
     )
 
 
-def test_login_throttle_and_expiry(workspace):
+def test_login_throttle_and_expiry(workspace, monkeypatch):
     client, store = workspace
+    # Short backoff must be tested with a controlled clock, not CPU/hash speed.
+    monkeypatch.setattr("fraudguard.auth.time.time", lambda: 1700000000.0)
     for _ in range(5):
         assert (
             client.post(
