@@ -31,3 +31,10 @@ compose.rollback.yaml
 known_hosts*
 compose.override.yaml
 *.log
+mlruns/
+mlflow.db*
+.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars
+!*.tfvars.example

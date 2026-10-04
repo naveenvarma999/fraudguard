@@ -1,0 +1,96 @@
+{
+  "dataset": "FraudGuard synthetic compromise simulation v1",
+  "seed": 42,
+  "runtime": {
+    "python": "3.12.14",
+    "numpy": "2.3.3",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.2"
+  },
+  "accounts": 100,
+  "days": 60,
+  "rows": 10610,
+  "dataset_sha256": "41ee10fb08762326b7a76b75aad4db454939e87af2710bce2f07948e25ff7bfe",
+  "exact_online_offline_parity": true,
+  "feature_names": [
+    "log_amount",
+    "transactions_10m",
+    "transactions_1h",
+    "mean_amount_30d",
+    "amount_to_mean_30d",
+    "new_merchant_30d",
+    "distance_from_previous_km",
+    "history_count_30d",
+    "cold_start"
+  ],
+  "split_rows": {
+    "fit": 4662,
+    "selection": 1362,
+    "test_seen": 1667,
+    "test_unseen": 464
+  },
+  "cutoffs": {
+    "fit_end": 3109262,
+    "selection_end": 4144735
+  },
+  "selection_average_precision": {
+    "logistic": 0.7722649683541796,
+    "histogram_gbm": 0.792541576838003
+  },
+  "selected_model": "histogram_gbm",
+  "selection_review_budget": 0.05,
+  "threshold": 0.8414573720786164,
+  "evaluation": {
+    "test_seen": {
+      "rows": 1667,
+      "fraud_cases": 193,
+      "average_precision": 0.8495060427079363,
+      "precision": 0.8809523809523809,
+      "recall": 0.38341968911917096,
+      "review_rate": 0.05038992201559688
+    },
+    "test_unseen": {
+      "rows": 464,
+      "fraud_cases": 32,
+      "average_precision": 0.9239760761465805,
+      "precision": 1.0,
+      "recall": 0.4375,
+      "review_rate": 0.03017241379310345
+    },
+    "unseen_first_event_no_history": {
+      "rows": 23,
+      "fraud_cases": 0,
+      "average_precision": null,
+      "precision": 0.0,
+      "recall": 0.0,
+      "review_rate": 0.0
+    },
+    "amount_only_test_unseen": {
+      "rows": 464,
+      "fraud_cases": 32,
+      "average_precision": 0.23840571172527023,
+      "precision": 0.3,
+      "recall": 0.09375,
+      "review_rate": 0.021551724137931036
+    },
+    "random_split_diagnostic": {
+      "rows": 2122,
+      "fraud_cases": 222,
+      "average_precision": 0.800896227176505,
+      "precision": 0.8584905660377359,
+      "recall": 0.4099099099099099,
+      "review_rate": 0.04995287464655985
+    }
+  },
+  "limits": [
+    "Synthetic generator encodes behavioral fraud signals; scores do not establish real-bank performance.",
+    "Unseen accounts are excluded from model fitting and selection, but have prior unlabeled transaction history at scoring time.",
+    "Scores are not calibrated probabilities. Random split is a diagnostic, not an unbiased deployment estimate.",
+    "Labels are delayed 1-3 days; test metrics assume eventual labels have arrived.",
+    "This research reference is in-memory, single-owner and does not replace the deployed V1-V28 model."
+  ],
+  "example_context": [
+    "0 prior transactions in the last 10 minutes",
+    "Amount is 0.61 times the prior 30-day mean (minimum denominator 1)"
+  ]
+}
