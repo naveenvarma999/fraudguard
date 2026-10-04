@@ -1,0 +1,26 @@
+# Optional dedicated Caddy proxy. Do not combine with an existing Caddy override.
+services:
+  api:
+    environment:
+      TRUSTED_PROXY_IPS: "172.30.80.2"
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:?Set the public hostname or reserved IP}
+    volumes:
+      - ./ops/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      default:
+        ipv4_address: 172.30.80.2
+    restart: unless-stopped
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.80.0/24
+volumes:
+  caddy_data:
+  caddy_config:
