@@ -1,6 +1,6 @@
 {
   "dataset": "FraudGuard synthetic compromise simulation v1",
-  "seed": 42,
+  "seed": 8,
   "runtime": {
     "python": "3.12.14",
     "numpy": "2.3.3",
@@ -9,9 +9,9 @@
   },
   "accounts": 100,
   "days": 60,
-  "rows": 10610,
-  "fraud_rate": 0.10471253534401508,
-  "dataset_sha256": "41ee10fb08762326b7a76b75aad4db454939e87af2710bce2f07948e25ff7bfe",
+  "rows": 10422,
+  "fraud_rate": 0.09019382076376894,
+  "dataset_sha256": "9eefd923a1fcf87553fead29da5554de670bf057a162030b5f98cd2562b4fae6",
   "exact_online_offline_parity": true,
   "feature_names": [
     "log_amount",
@@ -25,42 +25,42 @@
     "cold_start"
   ],
   "split_rows": {
-    "fit": 4662,
-    "selection": 1362,
-    "test_seen": 1667,
-    "test_unseen": 464
+    "fit": 4579,
+    "selection": 1282,
+    "test_seen": 1567,
+    "test_unseen": 496
   },
   "cutoffs": {
-    "fit_end": 3109262,
-    "selection_end": 4144735
+    "fit_end": 3110241,
+    "selection_end": 4146511
   },
   "selection_average_precision": {
-    "logistic": 0.7722649683541796,
-    "histogram_gbm": 0.792541576838003
+    "logistic": 0.8049997467965981,
+    "histogram_gbm": 0.7970200863379544
   },
-  "selected_model": "histogram_gbm",
+  "selected_model": "logistic",
   "selection_review_budget": 0.05,
-  "threshold": 0.8414573720786164,
+  "threshold": 0.9855379077189723,
   "evaluation": {
     "test_seen": {
-      "rows": 1667,
-      "fraud_cases": 193,
+      "rows": 1567,
+      "fraud_cases": 146,
       "status": "ok",
-      "average_precision": 0.8495060427079363,
-      "precision": 0.8809523809523809,
-      "recall": 0.38341968911917096,
-      "review_rate": 0.05038992201559688,
-      "fraud_rate": 0.11577684463107378
+      "average_precision": 0.7506464101365605,
+      "precision": 0.7916666666666666,
+      "recall": 0.3904109589041096,
+      "review_rate": 0.04594767070835992,
+      "fraud_rate": 0.09317166560306318
     },
     "test_unseen": {
-      "rows": 464,
-      "fraud_cases": 32,
+      "rows": 496,
+      "fraud_cases": 38,
       "status": "ok",
-      "average_precision": 0.9239760761465805,
-      "precision": 1.0,
-      "recall": 0.4375,
-      "review_rate": 0.03017241379310345,
-      "fraud_rate": 0.06896551724137931
+      "average_precision": 0.6933148059949091,
+      "precision": 0.7368421052631579,
+      "recall": 0.3684210526315789,
+      "review_rate": 0.038306451612903226,
+      "fraud_rate": 0.07661290322580645
     },
     "unseen_first_event_no_history": {
       "rows": 23,
@@ -73,24 +73,24 @@
       "fraud_rate": 0.0
     },
     "amount_only_test_unseen": {
-      "rows": 464,
-      "fraud_cases": 32,
+      "rows": 496,
+      "fraud_cases": 38,
       "status": "ok",
-      "average_precision": 0.23840571172527023,
-      "precision": 0.3,
-      "recall": 0.09375,
-      "review_rate": 0.021551724137931036,
-      "fraud_rate": 0.06896551724137931
+      "average_precision": 0.19700201318638613,
+      "precision": 0.23529411764705882,
+      "recall": 0.10526315789473684,
+      "review_rate": 0.034274193548387094,
+      "fraud_rate": 0.07661290322580645
     },
     "random_split_diagnostic": {
-      "rows": 2122,
-      "fraud_cases": 222,
+      "rows": 2085,
+      "fraud_cases": 188,
       "status": "ok",
-      "average_precision": 0.800896227176505,
-      "precision": 0.8584905660377359,
-      "recall": 0.4099099099099099,
-      "review_rate": 0.04995287464655985,
-      "fraud_rate": 0.10461828463713478
+      "average_precision": 0.7813521008474653,
+      "precision": 0.8469387755102041,
+      "recall": 0.44148936170212766,
+      "review_rate": 0.04700239808153477,
+      "fraud_rate": 0.09016786570743406
     }
   },
   "limits": [
@@ -102,6 +102,6 @@
   ],
   "example_context": [
     "0 prior transactions in the last 10 minutes",
-    "Amount is 0.61 times the prior 30-day mean (minimum denominator 1)"
+    "Amount is 0.34 times the prior 30-day mean (minimum denominator 1)"
   ]
 }

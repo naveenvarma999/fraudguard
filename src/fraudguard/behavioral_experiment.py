@@ -86,23 +86,67 @@ def split_masks(frame):
 
 
 def measure(y, scores, threshold):
-    if len(y) == 0:
-        return {"rows": 0, "fraud_cases": 0, "average_precision": None}
+    enough = len(y) > 0 and 0 < int(np.sum(y)) < len(y)
     predicted = scores >= threshold
     return {
         "rows": len(y),
         "fraud_cases": int(np.sum(y)),
-        "average_precision": float(average_precision_score(y, scores)) if np.sum(y) else None,
-        "precision": float(precision_score(y, predicted, zero_division=0)),
-        "recall": float(recall_score(y, predicted, zero_division=0)),
-        "review_rate": float(np.mean(predicted)),
+        "status": "ok" if enough else "insufficient_data",
+        "average_precision": float(average_precision_score(y, scores)) if enough else None,
+        "precision": float(precision_score(y, predicted, zero_division=0))
+        if enough and np.any(predicted)
+        else None,
+        "recall": float(recall_score(y, predicted, zero_division=0)) if enough else None,
+        "review_rate": float(np.mean(predicted)) if len(y) else None,
+        "fraud_rate": float(np.mean(y)) if len(y) else None,
     }
 
 
-def run(output, seed=42, accounts=100, days=60):
+def run(output, seed=42, accounts=100, days=60, data=None, tracking_uri=None, export_model=False):
+    from fraudguard.experiment_tracking import TrainingRun
+
+    with TrainingRun(tracking_uri) as tracker:
+        report = _run(output, seed, accounts, days, data, tracker, export_model)
+        tracker.finish(report, output)
+        return report
+
+
+def _run(output, seed, accounts, days, data, tracker, export_model):
     if accounts < 20 or days < 20:
         raise ValueError("Use at least 20 accounts and 20 days for separated evaluation windows")
-    frame = generate(seed, accounts, days)
+    frame = generate(seed, accounts, days) if data is None else pd.read_csv(data)
+    required = {
+        "event_id",
+        "account_id",
+        "merchant_id",
+        "timestamp",
+        "amount",
+        "latitude",
+        "longitude",
+        "label",
+        "label_available_at",
+    }
+    if (
+        set(frame.columns) != required
+        or frame.isna().any().any()
+        or not frame.label.isin([0, 1]).all()
+    ):
+        raise ValueError("Expected complete normalized events and binary labels")
+    if not (frame.label_available_at >= frame.timestamp).all():
+        raise ValueError("Labels cannot be available before their transaction")
+    frame = frame.sort_values(["timestamp", "event_id"]).reset_index(drop=True)
+    tracker.parameters(
+        {
+            "seed": seed,
+            "rows": len(frame),
+            "dataset_sha256": hashlib.sha256(
+                frame.to_csv(index=False, lineterminator="\n").encode()
+            ).hexdigest(),
+        }
+    )
+    if data is not None:
+        accounts = int(frame.account_id.nunique())
+        days = int(np.ceil((frame.timestamp.max() - frame.timestamp.min()) / 86400))
     events = [
         Event(**r) for r in frame.drop(columns=["label", "label_available_at"]).to_dict("records")
     ]
@@ -126,13 +170,15 @@ def run(output, seed=42, accounts=100, days=60):
     with threadpool_limits(limits=2):
         selection_ap = {}
         for name, model in candidates.items():
-            model.fit(features.loc[fit], frame.loc[fit, "label"])
-            selection_ap[name] = float(
-                average_precision_score(
-                    frame.loc[selection, "label"],
-                    model.predict_proba(features.loc[selection])[:, 1],
+            with tracker.candidate(name, model, features.columns) as log_metric:
+                model.fit(features.loc[fit], frame.loc[fit, "label"])
+                selection_ap[name] = float(
+                    average_precision_score(
+                        frame.loc[selection, "label"],
+                        model.predict_proba(features.loc[selection])[:, 1],
+                    )
                 )
-            )
+                log_metric(selection_ap[name])
         winner = max(selection_ap, key=selection_ap.get)
         model = candidates[winner]
         # Review capacity is specified before evaluating test outcomes.
@@ -186,7 +232,9 @@ def run(output, seed=42, accounts=100, days=60):
         )
     dataset_csv = frame.to_csv(index=False, lineterminator="\n")
     report = {
-        "dataset": "FraudGuard synthetic compromise simulation v1",
+        "dataset": "FraudGuard synthetic compromise simulation v1"
+        if data is None
+        else "Sparkov external synthetic normalized dataset",
         "seed": seed,
         "runtime": {
             "python": platform.python_version(),
@@ -195,6 +243,7 @@ def run(output, seed=42, accounts=100, days=60):
         "accounts": accounts,
         "days": days,
         "rows": len(frame),
+        "fraud_rate": float(frame.label.mean()),
         "dataset_sha256": hashlib.sha256(dataset_csv.encode()).hexdigest(),
         "exact_online_offline_parity": True,
         "feature_names": list(features.columns),
@@ -209,7 +258,11 @@ def run(output, seed=42, accounts=100, days=60):
             "Synthetic generator encodes behavioral fraud signals; scores do not establish real-bank performance.",
             "Unseen accounts are excluded from model fitting and selection, but have prior unlabeled transaction history at scoring time.",
             "Scores are not calibrated probabilities. Random split is a diagnostic, not an unbiased deployment estimate.",
-            "Labels are delayed 1-3 days; test metrics assume eventual labels have arrived.",
+            (
+                "Labels are delayed 1-3 days; test metrics assume eventual labels have arrived."
+                if data is None
+                else "Sparkov label delay is simulated at 2 days; test metrics use eventual labels."
+            ),
             "This research reference is in-memory, single-owner and does not replace the deployed V1-V28 model.",
         ],
         "example_context": reasons(features.iloc[-1].to_dict()),
@@ -220,4 +273,8 @@ def run(output, seed=42, accounts=100, days=60):
         json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
     (destination / "synthetic-transactions.csv").write_text(dataset_csv, encoding="utf-8")
+    if export_model:
+        from fraudguard.behavioral_serving import save_bundle
+
+        save_bundle(destination / "model", model, report)
     return report

@@ -1,6 +1,6 @@
 {
   "dataset": "FraudGuard synthetic compromise simulation v1",
-  "seed": 42,
+  "seed": 2,
   "runtime": {
     "python": "3.12.14",
     "numpy": "2.3.3",
@@ -9,9 +9,9 @@
   },
   "accounts": 100,
   "days": 60,
-  "rows": 10610,
-  "fraud_rate": 0.10471253534401508,
-  "dataset_sha256": "41ee10fb08762326b7a76b75aad4db454939e87af2710bce2f07948e25ff7bfe",
+  "rows": 10701,
+  "fraud_rate": 0.09700028034763106,
+  "dataset_sha256": "f76ba63d6c4f3a0d54b4fb5cd1e23b7412ab8e29ecd3c568267863575c7ffe65",
   "exact_online_offline_parity": true,
   "feature_names": [
     "log_amount",
@@ -25,42 +25,42 @@
     "cold_start"
   ],
   "split_rows": {
-    "fit": 4662,
-    "selection": 1362,
-    "test_seen": 1667,
-    "test_unseen": 464
+    "fit": 4632,
+    "selection": 1406,
+    "test_seen": 1669,
+    "test_unseen": 459
   },
   "cutoffs": {
-    "fit_end": 3109262,
-    "selection_end": 4144735
+    "fit_end": 3110568,
+    "selection_end": 4147037
   },
   "selection_average_precision": {
-    "logistic": 0.7722649683541796,
-    "histogram_gbm": 0.792541576838003
+    "logistic": 0.7556799470625554,
+    "histogram_gbm": 0.7805339908574283
   },
   "selected_model": "histogram_gbm",
   "selection_review_budget": 0.05,
-  "threshold": 0.8414573720786164,
+  "threshold": 0.7886204296238947,
   "evaluation": {
     "test_seen": {
-      "rows": 1667,
-      "fraud_cases": 193,
+      "rows": 1669,
+      "fraud_cases": 141,
       "status": "ok",
-      "average_precision": 0.8495060427079363,
-      "precision": 0.8809523809523809,
-      "recall": 0.38341968911917096,
-      "review_rate": 0.05038992201559688,
-      "fraud_rate": 0.11577684463107378
+      "average_precision": 0.7328351887462375,
+      "precision": 0.8,
+      "recall": 0.36879432624113473,
+      "review_rate": 0.03894547633313361,
+      "fraud_rate": 0.08448172558418214
     },
     "test_unseen": {
-      "rows": 464,
-      "fraud_cases": 32,
+      "rows": 459,
+      "fraud_cases": 30,
       "status": "ok",
-      "average_precision": 0.9239760761465805,
-      "precision": 1.0,
-      "recall": 0.4375,
-      "review_rate": 0.03017241379310345,
-      "fraud_rate": 0.06896551724137931
+      "average_precision": 0.7147751426965752,
+      "precision": 0.7142857142857143,
+      "recall": 0.5,
+      "review_rate": 0.0457516339869281,
+      "fraud_rate": 0.06535947712418301
     },
     "unseen_first_event_no_history": {
       "rows": 23,
@@ -73,24 +73,24 @@
       "fraud_rate": 0.0
     },
     "amount_only_test_unseen": {
-      "rows": 464,
-      "fraud_cases": 32,
+      "rows": 459,
+      "fraud_cases": 30,
       "status": "ok",
-      "average_precision": 0.23840571172527023,
-      "precision": 0.3,
-      "recall": 0.09375,
-      "review_rate": 0.021551724137931036,
-      "fraud_rate": 0.06896551724137931
+      "average_precision": 0.18161452303608405,
+      "precision": 0.21052631578947367,
+      "recall": 0.13333333333333333,
+      "review_rate": 0.04139433551198257,
+      "fraud_rate": 0.06535947712418301
     },
     "random_split_diagnostic": {
-      "rows": 2122,
-      "fraud_cases": 222,
+      "rows": 2141,
+      "fraud_cases": 208,
       "status": "ok",
-      "average_precision": 0.800896227176505,
-      "precision": 0.8584905660377359,
-      "recall": 0.4099099099099099,
-      "review_rate": 0.04995287464655985,
-      "fraud_rate": 0.10461828463713478
+      "average_precision": 0.8536737355488262,
+      "precision": 0.898989898989899,
+      "recall": 0.42788461538461536,
+      "review_rate": 0.04624007473143391,
+      "fraud_rate": 0.09715086408220458
     }
   },
   "limits": [
@@ -101,7 +101,7 @@
     "This research reference is in-memory, single-owner and does not replace the deployed V1-V28 model."
   ],
   "example_context": [
-    "0 prior transactions in the last 10 minutes",
-    "Amount is 0.61 times the prior 30-day mean (minimum denominator 1)"
+    "1 prior transactions in the last 10 minutes",
+    "Amount is 1.20 times the prior 30-day mean (minimum denominator 1)"
   ]
 }
