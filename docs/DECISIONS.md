@@ -1,5 +1,9 @@
 # Engineering decision records
 
+## 009 — Shared organisation history and candidate lifecycle (2.6)
+
+Supersedes decision 008's owner-scoped history and rejection of late events. One organisation shares account history; owner remains the submitting audit/review identity. Late events are retained without scoring and inform later transactions. The single SQLite writer gives atomic history, prediction and audit updates; measured contention is published in [lifecycle and capacity](LIFECYCLE.md). Candidates train on arrived labels, shadow the live model, and require separate approval before activation. The larger research candidate remains unpromoted because its held-out ablation results do not justify replacing the champion. See [ML evidence](ML_EVIDENCE.md).
+
 These records explain current code and tradeoffs. They are not claims of historical experiments that were never run.
 
 ## 001 — Establish timing correctness before distributed infrastructure

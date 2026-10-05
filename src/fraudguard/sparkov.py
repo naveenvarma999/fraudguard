@@ -5,7 +5,7 @@ import hashlib
 import pandas as pd
 
 
-def normalize(raw):
+def normalize(raw, enriched=False):
     clock = (
         raw["trans_date_trans_time"]
         if "trans_date_trans_time" in raw
@@ -29,6 +29,10 @@ def normalize(raw):
             "label_available_at": times + 2 * 86400,
         }
     )
+    if enriched:
+        result["category"] = raw.category.astype(str)
+        result["home_latitude"] = pd.to_numeric(raw.lat)
+        result["home_longitude"] = pd.to_numeric(raw.long)
     if (
         not result.label.isin([0, 1]).all()
         or result.event_id.duplicated().any()

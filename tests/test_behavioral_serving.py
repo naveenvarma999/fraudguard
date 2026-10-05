@@ -138,9 +138,9 @@ def test_persisted_retries_conflicts_restart_and_cold_start(behavioral_client):
     third = client.post("/v1/behavioral/predict", json=payload, headers=headers).json()
     assert third["features"] == offline_features(events).iloc[-1].to_dict()
     late = {"transaction": {**first["transaction"], "event_id": "late"}}
-    assert client.post("/v1/behavioral/predict", json=late, headers=headers).status_code == 422
+    assert client.post("/v1/behavioral/predict", json=late, headers=headers).status_code == 202
     assert len(restarted.query("SELECT * FROM predictions")) == 3
-    assert len(restarted.query("SELECT * FROM behavioral_events")) == 3
+    assert len(restarted.query("SELECT * FROM account_events")) == 4
 
 
 def test_atomic_failure_and_concurrent_duplicate(behavioral_client, monkeypatch):
@@ -160,7 +160,7 @@ def test_atomic_failure_and_concurrent_duplicate(behavioral_client, monkeypatch)
     monkeypatch.setattr(module, "score_event", fail)
     with pytest.raises(RuntimeError, match="injected"):
         ingest(app.state.store, app.state.behavioral, "owner", payload)
-    for table in ("predictions", "behavioral_events", "behavioral_accounts"):
+    for table in ("predictions", "account_events", "account_watermarks"):
         assert app.state.store.query("SELECT * FROM " + table) == []
     monkeypatch.setattr(module, "score_event", original)
     with ThreadPoolExecutor(max_workers=4) as pool:
@@ -195,8 +195,12 @@ def test_review_labels_isolation_and_monitoring(behavioral_client):
             == 200
         )
     result = client.post("/v1/behavioral/predict", json=payload, headers=tokens["first"]).json()
-    isolated = client.post("/v1/behavioral/predict", json=payload, headers=tokens["second"]).json()
-    assert isolated["cold_start"] and not result["cold_start"]
+    shared = client.post("/v1/behavioral/predict", json=payload, headers=tokens["second"]).json()
+    assert shared == result  # Shared event ledger, even for cross-user retries.
+    payload["transaction"]["event_id"] = "d"
+    payload["transaction"]["timestamp"] = 702
+    shared = client.post("/v1/behavioral/predict", json=payload, headers=tokens["second"]).json()
+    assert shared["features"]["history_count_30d"] == 3 and not shared["cold_start"]
     identifier = result["prediction_id"]
     route = f"/ops/predictions/{identifier}"
     assert client.get(route, headers=tokens["second"]).status_code == 404

@@ -69,7 +69,7 @@ def check(base, expected, key, require_backup=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", default="http://127.0.0.1:8000")
-    parser.add_argument("--expected-version", default="2.5.0")
+    parser.add_argument("--expected-version", default="2.6.0")
     parser.add_argument("--require-backup", action="store_true")
     parser.add_argument("--attempts", type=int, default=1)
     parser.add_argument("--interval", type=int, default=15)

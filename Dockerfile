@@ -10,6 +10,7 @@ COPY scripts /app/scripts
 RUN pip install --no-cache-dir --no-deps .
 COPY artifacts/benchmark /app/artifacts/benchmark
 COPY artifacts/behavioral_service /app/artifacts/behavioral_service
+COPY artifacts/behavioral_candidate /app/artifacts/behavioral_candidate
 RUN mkdir -p /data /backups && chown 10001:10001 /data /backups
 USER 10001:10001
 EXPOSE 8000

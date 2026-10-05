@@ -1,6 +1,6 @@
 # Operations guide
 
-Current application version: **2.5.0**. The original ULB model and a separate authenticated behavioral endpoint are included; see [behavioral API](BEHAVIORAL_API.md). This guide consolidates the 2.1–2.3 operating instructions; historical release notes remain in Git history.
+Current source version: **2.6.0**. The public AWS demo was verified on **2.5.0** on 5 October 2026; source changes do not deploy automatically. The original ULB model and a separate authenticated behavioral endpoint are included; see [behavioral API](BEHAVIORAL_API.md). This guide consolidates the 2.1–2.3 operating instructions; historical release notes remain in Git history.
 
 ## Start locally
 
@@ -31,12 +31,18 @@ On Ubuntu, from `~/fraudguard`, first create a backup with the command below. Se
 sudo bash scripts/Deploy-Checked.sh
 sudo bash scripts/Compose.sh ps
 curl -fsS http://127.0.0.1:8000/health/ready
-sudo bash scripts/Compose.sh exec api python -m fraudguard.deployment --expected-version 2.5.0
+sudo bash scripts/Compose.sh exec api python -m fraudguard.deployment --expected-version 2.6.0
 ```
 
 The script configures missing secrets, builds, waits for health, checks application/model/security/backup contracts and smoke-tests enabled workers. On failure it attempts image rollback; this does not restore the database. Inspect its output and rollback override before exposing traffic. Changes in this repository do not automatically update AWS.
 
 Keep SSH restricted to your public IP, expose 80/443 through Caddy, and keep 8000 bound to loopback. The [Terraform reference](../infra/README.md) defines new infrastructure, not an automatic upgrade/import of the existing instance.
+
+## Version 2.6 migration
+
+Take and verify a backup before updating. Startup merges legacy owner-scoped events into shared organisation history. Identical duplicates merge; conflicting event IDs stop migration for operator investigation. Do not delete conflicting records merely to make startup pass. Keep the previous source and backup together.
+
+After new 2.6 traffic, reverting only to the 2.5 image is unsafe: old code cannot see the new account-event table. Pause ingestion and make a reviewed recovery plan before an application downgrade. Model rollback within 2.6 preserves shared history. See [lifecycle and capacity](LIFECYCLE.md) for retraining, shadow evaluation and approval. Deployment leaves the existing behavioral champion active.
 
 ## Request limits and optional workers
 

@@ -235,8 +235,12 @@ def mount_workspace(app, authorize, monitor_authorize):
             db.execute("BEGIN")
             record = dict(owned(db, identifier, actor))
             behavioral = db.execute(
-                "SELECT response FROM behavioral_events WHERE prediction_id=?", (identifier,)
+                "SELECT response FROM account_events WHERE prediction_id=?", (identifier,)
             ).fetchone()
+            if behavioral is None:
+                behavioral = db.execute(
+                    "SELECT response FROM behavioral_events WHERE prediction_id=?", (identifier,)
+                ).fetchone()
             label = db.execute(
                 "SELECT fraud,source,actor,at FROM labels WHERE prediction_id=?", (identifier,)
             ).fetchone()
@@ -305,6 +309,15 @@ def mount_workspace(app, authorize, monitor_authorize):
                 "INSERT INTO labels VALUES(?,?,?,?,?) ON CONFLICT(prediction_id) DO UPDATE SET fraud=excluded.fraud,source=excluded.source,actor=excluded.actor,at=excluded.at",
                 (identifier, payload.fraud, payload.source, actor["name"], time.time()),
             )
+            event = db.execute(
+                "SELECT raw FROM account_events WHERE prediction_id=?", (identifier,)
+            ).fetchone()
+            if event:
+                raw = json.loads(event[0])
+                db.execute(
+                    "INSERT INTO label_history(prediction_id,merchant,event_timestamp,fraud,available_at) VALUES(?,?,?,?,?)",
+                    (identifier, raw["merchant_id"], raw["timestamp"], payload.fraud, time.time()),
+                )
             store().audit(
                 db,
                 actor["name"],
@@ -330,6 +343,9 @@ def mount_workspace(app, authorize, monitor_authorize):
 
     @app.get("/ops/monitoring")
     def monitoring(days: int = Query(default=7, ge=1, le=30), actor=Depends(monitor_authorize)):
+        from fraudguard.behavioral_lifecycle import active
+
+        behavioral = active(store(), app.state.behavioral) if app.state.behavioral else None
         if actor["role"] not in ("admin", "service", "monitor"):
             raise HTTPException(403, "Administrator access required")
         with app.state.runtime.lock:
@@ -339,17 +355,17 @@ def mount_workspace(app, authorize, monitor_authorize):
             return {
                 "model_version": manifest["run_id"],
                 "behavioral": {
-                    "model_version": app.state.behavioral[1]["version"],
-                    "quality": quality(store(), app.state.behavioral[1]["version"], days),
+                    "model_version": behavioral[1]["version"],
+                    "quality": quality(store(), behavioral[1]["version"], days),
                     "drift": drift(
                         store(),
-                        {**app.state.behavioral[1], "run_id": app.state.behavioral[1]["version"]},
+                        {**behavioral[1], "run_id": behavioral[1]["version"]},
                         days,
                     )
-                    if app.state.behavioral[1].get("reference")
+                    if behavioral[1].get("reference")
                     else {"status": "reference_not_available"},
                 }
-                if app.state.behavioral
+                if behavioral
                 else None,
                 "workers": app.state.pool.status() if app.state.pool else [],
                 "drift": drift(store(), manifest, days),
@@ -363,6 +379,45 @@ def mount_workspace(app, authorize, monitor_authorize):
                 ),
                 "alerts": store().query("SELECT * FROM alerts ORDER BY active DESC,name"),
             }
+
+    @app.get("/ops/behavioral/releases")
+    def behavioral_releases(actor=Depends(admin)):
+        from fraudguard.behavioral_lifecycle import evidence
+
+        records = store().query("SELECT * FROM behavioral_candidates ORDER BY submitted_at DESC")
+        for record in records:
+            record["evidence"] = evidence(store(), record["version"])
+        return records
+
+    @app.post("/ops/behavioral/releases/{version}/shadow")
+    def behavioral_shadow(version: str, actor=Depends(admin)):
+        from fraudguard.behavioral_lifecycle import start_shadow
+
+        try:
+            start_shadow(store(), version, actor["name"])
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+        return {"status": "shadow_started"}
+
+    @app.post("/ops/behavioral/releases/{version}/promote")
+    def behavioral_promote(version: str, actor=Depends(admin)):
+        from fraudguard.behavioral_lifecycle import promote
+
+        try:
+            promote(store(), version, actor["name"])
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+        return {"status": "promoted"}
+
+    @app.post("/ops/behavioral/rollback")
+    def behavioral_rollback(actor=Depends(admin)):
+        from fraudguard.behavioral_lifecycle import rollback
+
+        try:
+            rollback(store(), actor["name"])
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+        return {"status": "rolled_back"}
 
     @app.get("/ops/releases")
     def releases(actor=Depends(admin)):

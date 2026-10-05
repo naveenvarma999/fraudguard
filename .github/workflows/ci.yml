@@ -51,7 +51,7 @@ jobs:
           name: operations-load-report
           path: artifacts/operations/load_test.json
       - name: Verify deployment contracts
-        run: docker exec fraudguard python -m fraudguard.deployment --expected-version 2.5.0
+        run: docker exec fraudguard python -m fraudguard.deployment --expected-version 2.6.0
       - name: Check Linux deployment script syntax
         run: |
           bash -n scripts/Deploy-Checked.sh

@@ -69,6 +69,17 @@ def validate_snapshot(folder):
                     != json.loads(row["manifest"])["model_sha256"]
                 ):
                     raise ValueError("Backup behavioral model checksum mismatch")
+            behavioral_active = db.execute(
+                "SELECT value FROM settings WHERE key='behavioral_active'"
+            ).fetchone()
+            if (
+                behavioral_active
+                and not db.execute(
+                    "SELECT 1 FROM behavioral_candidates WHERE version=? AND status='approved'",
+                    (behavioral_active[0],),
+                ).fetchone()
+            ):
+                raise ValueError("Active behavioral model is absent or unapproved")
         active = db.execute("SELECT value FROM settings WHERE key='active_release'").fetchone()
         if (
             active

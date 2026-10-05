@@ -10,11 +10,4 @@ Validation: full Python suite 114 passed; final targeted suite 13 passed after t
 
 The trained model weights and research metrics are unchanged. Larger Sparkov training, enriched features, calibration and account-bootstrap intervals remain outstanding. This combined branch includes the previous unmerged v2.4 work.
 
-## Publish from your Windows PowerShell
-
-```powershell
-cd "C:\Users\NAVEEN VARMA\Documents\Codex\2026-09-28\do-x20\outputs\FraudGuard-GitHub"
-git push -u origin codex/server-owned-history
-```
-
-Create a pull request from that branch to main, inspect the CI results and merge after review. Do not assume this updates AWS. Use the existing checked deployment workflow in OPERATIONS.md after publication. Existing servers retain their current volumes unless explicitly migrated; do not enable `.storage-enabled` on an empty directory.
+For application deployment and migration, see [Operations](OPERATIONS.md).

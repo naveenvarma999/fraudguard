@@ -1,0 +1,391 @@
+{
+  "seed": 42,
+  "dataset": "Sparkov 1197 active accounts; external synthetic profiles",
+  "dataset_sha256": "b6aada5e02e1cfc25271dad84fb94930ad096c7975f63b2a2308ef3d9ad8498d",
+  "training_asof": 1717506648,
+  "rows": 523605,
+  "accounts": 1197,
+  "selected_model": "histogram_gbm",
+  "selection_ap": {
+    "histogram_gbm": 0.8568341940011834,
+    "logistic": 0.03600917709805243
+  },
+  "score_kind": "sigmoid_calibrated_synthetic",
+  "threshold": 0.09913748924657498,
+  "policy_fpr_threshold": 0.04845663904424406,
+  "cutoffs": [
+    1713553870,
+    1715134981,
+    1716716092,
+    1717506648
+  ],
+  "split_rows": {
+    "fit": 216629,
+    "selection": 39920,
+    "calibration": 36560,
+    "policy": 20579,
+    "seen": 81426,
+    "unseen": 20732
+  },
+  "ablation": {
+    "legacy": {
+      "features": [
+        "log_amount",
+        "transactions_10m",
+        "transactions_1h",
+        "mean_amount_30d",
+        "amount_to_mean_30d",
+        "new_merchant_30d",
+        "distance_from_previous_km",
+        "history_count_30d",
+        "cold_start"
+      ],
+      "selection_ap": 0.7056266239315261,
+      "seen": {
+        "status": "measured",
+        "rows": 81426,
+        "fraud_cases": 1323,
+        "fraud_rate": 0.01624788151204775,
+        "average_precision": 0.6849803472448277,
+        "ap_lift": 42.158132845621566,
+        "recall": 0.8208616780045351,
+        "false_positive_rate": 0.03376902238368101,
+        "review_rate": 0.046557610591211655,
+        "brier": 0.008221384741318796
+      },
+      "unseen": {
+        "status": "measured",
+        "rows": 20732,
+        "fraud_cases": 282,
+        "fraud_rate": 0.013602160910669497,
+        "average_precision": 0.6571781974096074,
+        "ap_lift": 48.314249605304894,
+        "recall": 0.7943262411347518,
+        "false_positive_rate": 0.028508557457212712,
+        "review_rate": 0.038925332818830795,
+        "brier": 0.0071383245271938525
+      }
+    },
+    "clock": {
+      "features": [
+        "log_amount",
+        "transactions_10m",
+        "transactions_1h",
+        "mean_amount_30d",
+        "amount_to_mean_30d",
+        "new_merchant_30d",
+        "distance_from_previous_km",
+        "history_count_30d",
+        "cold_start",
+        "hour_sin",
+        "hour_cos"
+      ],
+      "selection_ap": 0.8387912345385445,
+      "seen": {
+        "status": "measured",
+        "rows": 81426,
+        "fraud_cases": 1323,
+        "fraud_rate": 0.01624788151204775,
+        "average_precision": 0.8346981974023877,
+        "ap_lift": 51.37274030361815,
+        "recall": 0.9281934996220711,
+        "false_positive_rate": 0.031971336903736436,
+        "review_rate": 0.04653304841205512,
+        "brier": 0.005580620816372471
+      },
+      "unseen": {
+        "status": "measured",
+        "rows": 20732,
+        "fraud_cases": 282,
+        "fraud_rate": 0.013602160910669497,
+        "average_precision": 0.8047813310147209,
+        "ap_lift": 59.16569700211771,
+        "recall": 0.9290780141843972,
+        "false_positive_rate": 0.028557457212713938,
+        "review_rate": 0.04080648273200849,
+        "brier": 0.0052500433283579895
+      }
+    },
+    "category": {
+      "features": [
+        "log_amount",
+        "transactions_10m",
+        "transactions_1h",
+        "mean_amount_30d",
+        "amount_to_mean_30d",
+        "new_merchant_30d",
+        "distance_from_previous_km",
+        "history_count_30d",
+        "cold_start",
+        "hour_sin",
+        "hour_cos",
+        "category_unknown",
+        "category_entertainment",
+        "category_food_dining",
+        "category_gas_transport",
+        "category_grocery_net",
+        "category_grocery_pos",
+        "category_health_fitness",
+        "category_home",
+        "category_kids_pets",
+        "category_misc_net",
+        "category_misc_pos",
+        "category_personal_care",
+        "category_shopping_net",
+        "category_shopping_pos",
+        "category_travel"
+      ],
+      "selection_ap": 0.34329506157816786,
+      "seen": {
+        "status": "measured",
+        "rows": 81426,
+        "fraud_cases": 1323,
+        "fraud_rate": 0.01624788151204775,
+        "average_precision": 0.3220919764026754,
+        "ap_lift": 19.823629078279854,
+        "recall": 0.5291005291005291,
+        "false_positive_rate": 0.043419097911439025,
+        "review_rate": 0.05131039225800113,
+        "brier": 0.21151344968039298
+      },
+      "unseen": {
+        "status": "measured",
+        "rows": 20732,
+        "fraud_cases": 282,
+        "fraud_rate": 0.013602160910669497,
+        "average_precision": 0.3211013919949973,
+        "ap_lift": 23.606645598724413,
+        "recall": 0.5106382978723404,
+        "false_positive_rate": 0.03897310513447433,
+        "review_rate": 0.04538877098205672,
+        "brier": 0.20103619481154694
+      }
+    },
+    "home": {
+      "features": [
+        "log_amount",
+        "transactions_10m",
+        "transactions_1h",
+        "mean_amount_30d",
+        "amount_to_mean_30d",
+        "new_merchant_30d",
+        "history_count_30d",
+        "cold_start",
+        "hour_sin",
+        "hour_cos",
+        "home_distance_km",
+        "home_missing",
+        "category_unknown",
+        "category_entertainment",
+        "category_food_dining",
+        "category_gas_transport",
+        "category_grocery_net",
+        "category_grocery_pos",
+        "category_health_fitness",
+        "category_home",
+        "category_kids_pets",
+        "category_misc_net",
+        "category_misc_pos",
+        "category_personal_care",
+        "category_shopping_net",
+        "category_shopping_pos",
+        "category_travel"
+      ],
+      "selection_ap": 0.34366214793960265,
+      "seen": {
+        "status": "measured",
+        "rows": 81426,
+        "fraud_cases": 1323,
+        "fraud_rate": 0.01624788151204775,
+        "average_precision": 0.3226647405828604,
+        "ap_lift": 19.858880700453504,
+        "recall": 0.5321239606953893,
+        "false_positive_rate": 0.04395590677003358,
+        "review_rate": 0.051887603468179694,
+        "brier": 0.21595995102706997
+      },
+      "unseen": {
+        "status": "measured",
+        "rows": 20732,
+        "fraud_cases": 282,
+        "fraud_rate": 0.013602160910669497,
+        "average_precision": 0.32372864802164497,
+        "ap_lift": 23.79979549923668,
+        "recall": 0.5141843971631206,
+        "false_positive_rate": 0.03941320293398533,
+        "review_rate": 0.045871117113640746,
+        "brier": 0.20487113798580464
+      }
+    },
+    "delayed_merchant": {
+      "features": [
+        "log_amount",
+        "transactions_10m",
+        "transactions_1h",
+        "mean_amount_30d",
+        "amount_to_mean_30d",
+        "new_merchant_30d",
+        "history_count_30d",
+        "cold_start",
+        "hour_sin",
+        "hour_cos",
+        "home_distance_km",
+        "home_missing",
+        "category_unknown",
+        "category_entertainment",
+        "category_food_dining",
+        "category_gas_transport",
+        "category_grocery_net",
+        "category_grocery_pos",
+        "category_health_fitness",
+        "category_home",
+        "category_kids_pets",
+        "category_misc_net",
+        "category_misc_pos",
+        "category_personal_care",
+        "category_shopping_net",
+        "category_shopping_pos",
+        "category_travel",
+        "merchant_fraud_rate",
+        "merchant_label_count"
+      ],
+      "selection_ap": 0.8568341940011834,
+      "seen": {
+        "status": "measured",
+        "rows": 81426,
+        "fraud_cases": 1323,
+        "fraud_rate": 0.01624788151204775,
+        "average_precision": 0.5864946483024392,
+        "ap_lift": 36.09668422726713,
+        "recall": 0.7974300831443688,
+        "false_positive_rate": 0.04517933161055142,
+        "review_rate": 0.05740181268882175,
+        "brier": 0.03690398959038597
+      },
+      "unseen": {
+        "status": "measured",
+        "rows": 20732,
+        "fraud_cases": 282,
+        "fraud_rate": 0.013602160910669497,
+        "average_precision": 0.5500883558708577,
+        "ap_lift": 40.44124749615114,
+        "recall": 0.8085106382978723,
+        "false_positive_rate": 0.042689486552567234,
+        "review_rate": 0.05310630908740112,
+        "brier": 0.033715278891559404
+      }
+    }
+  },
+  "evaluation": {
+    "seen": {
+      "status": "measured",
+      "rows": 81426,
+      "fraud_cases": 1323,
+      "fraud_rate": 0.01624788151204775,
+      "average_precision": 0.5864946483024392,
+      "ap_lift": 36.09668422726713,
+      "recall": 0.7974300831443688,
+      "false_positive_rate": 0.04517933161055142,
+      "review_rate": 0.05740181268882175,
+      "brier": 0.011527565486060756,
+      "bootstrap": {
+        "unit": "account",
+        "method": "percentile cluster bootstrap",
+        "confidence": 0.95,
+        "requested": 200,
+        "valid": 200,
+        "accounts": 854,
+        "intervals": {
+          "average_precision": [
+            0.5338859488748761,
+            0.6346822322342147
+          ],
+          "ap_lift": [
+            31.544130792893505,
+            41.26197526011305
+          ],
+          "recall": [
+            0.7613133471452787,
+            0.8294240709336753
+          ],
+          "brier": [
+            0.010469497195777442,
+            0.012807289007349232
+          ]
+        }
+      },
+      "policy_target_fpr_5pct": {
+        "status": "measured",
+        "rows": 81426,
+        "fraud_cases": 1323,
+        "fraud_rate": 0.01624788151204775,
+        "average_precision": 0.5864946483024392,
+        "ap_lift": 36.09668422726713,
+        "recall": 0.8684807256235828,
+        "false_positive_rate": 0.06345580065665456,
+        "review_rate": 0.07653575025176233,
+        "brier": 0.011527565486060756
+      },
+      "uncalibrated_brier": 0.03690398959038597
+    },
+    "unseen": {
+      "status": "measured",
+      "rows": 20732,
+      "fraud_cases": 282,
+      "fraud_rate": 0.013602160910669497,
+      "average_precision": 0.5500883558708577,
+      "ap_lift": 40.44124749615114,
+      "recall": 0.8085106382978723,
+      "false_positive_rate": 0.042689486552567234,
+      "review_rate": 0.05310630908740112,
+      "brier": 0.010193563611075077,
+      "bootstrap": {
+        "unit": "account",
+        "method": "percentile cluster bootstrap",
+        "confidence": 0.95,
+        "requested": 200,
+        "valid": 200,
+        "accounts": 214,
+        "intervals": {
+          "average_precision": [
+            0.42630793440241554,
+            0.6526631627414591
+          ],
+          "ap_lift": [
+            31.796502696628338,
+            59.46293730831013
+          ],
+          "recall": [
+            0.7477290506995637,
+            0.8756921275973076
+          ],
+          "brier": [
+            0.008032457745517751,
+            0.012431145890304845
+          ]
+        }
+      },
+      "policy_target_fpr_5pct": {
+        "status": "measured",
+        "rows": 20732,
+        "fraud_cases": 282,
+        "fraud_rate": 0.013602160910669497,
+        "average_precision": 0.5500883558708577,
+        "ap_lift": 40.44124749615114,
+        "recall": 0.8652482269503546,
+        "false_positive_rate": 0.057799511002444987,
+        "review_rate": 0.06878255836388192,
+        "brier": 0.010193563611075077
+      },
+      "uncalibrated_brier": 0.033715278891559404
+    }
+  },
+  "parity": "Independent full-history oracle for ten preselected accounts; all remaining rows use replay",
+  "limits": [
+    "Synthetic generator; not bank validation",
+    "Merchant history excludes all held-out accounts, and uses only labels available strictly before each event",
+    "AP lift adjusts against the base rate but does not fully remove prevalence dependence",
+    "Bootstrap resamples accounts conditional on this fitted model; does not include retraining uncertainty",
+    "All ablations reported; no test-based tuning. Served cold-start review policy is separate from threshold-only metrics"
+  ]
+}

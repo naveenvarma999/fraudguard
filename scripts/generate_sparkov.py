@@ -26,6 +26,7 @@ def main():
     parser.add_argument("--source", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--accounts", type=int, default=100)
+    parser.add_argument("--enriched", action="store_true")
     args = parser.parse_args()
     source, output = Path(args.source).resolve(), Path(args.output).resolve()
     revision = subprocess.check_output(
@@ -69,7 +70,7 @@ def main():
     raw = pd.concat(frames, ignore_index=True)
     from fraudguard.sparkov import normalize
 
-    normalized = normalize(raw)
+    normalized = normalize(raw, enriched=args.enriched)
     text = normalized.to_csv(index=False, lineterminator="\n")
     (output / "normalized.csv").write_text(text, encoding="utf-8")
     provenance = {

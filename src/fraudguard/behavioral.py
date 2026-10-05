@@ -172,7 +172,9 @@ def reasons(features):
     if features["cold_start"]:
         result.append("No prior account transactions in the 30-day window")
     else:
-        result.append(f"{int(features['transactions_10m'])} prior transactions in the last 10 minutes")
+        result.append(
+            f"{int(features['transactions_10m'])} prior transactions in the last 10 minutes"
+        )
         result.append(
             f"Amount is {features['amount_to_mean_30d']:.2f} times the prior 30-day mean (minimum denominator 1)"
         )

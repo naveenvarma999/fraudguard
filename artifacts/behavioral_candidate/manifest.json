@@ -1,0 +1,465 @@
+{
+  "schema": "behavioral-v2",
+  "features": [
+    "log_amount",
+    "transactions_10m",
+    "transactions_1h",
+    "mean_amount_30d",
+    "amount_to_mean_30d",
+    "new_merchant_30d",
+    "history_count_30d",
+    "cold_start",
+    "hour_sin",
+    "hour_cos",
+    "home_distance_km",
+    "home_missing",
+    "category_unknown",
+    "category_entertainment",
+    "category_food_dining",
+    "category_gas_transport",
+    "category_grocery_net",
+    "category_grocery_pos",
+    "category_health_fitness",
+    "category_home",
+    "category_kids_pets",
+    "category_misc_net",
+    "category_misc_pos",
+    "category_personal_care",
+    "category_shopping_net",
+    "category_shopping_pos",
+    "category_travel",
+    "merchant_fraud_rate",
+    "merchant_label_count"
+  ],
+  "model_sha256": "b6271d28ff683f7934ad53ef05458921d64d3948e9c34013bddccf473f65b989",
+  "version": "behavioral-b6271d28ff683f79",
+  "threshold": 0.09913748924657498,
+  "dataset": "Sparkov 1197 active accounts; external synthetic profiles",
+  "dataset_sha256": "b6aada5e02e1cfc25271dad84fb94930ad096c7975f63b2a2308ef3d9ad8498d",
+  "seed": 42,
+  "score_kind": "sigmoid_calibrated_synthetic",
+  "history_source": "server-owned",
+  "model_type": "histogram_gbm",
+  "reference": {
+    "log_amount": {
+      "inner_edges": [
+        1.6695918352538475,
+        2.2300144001592104,
+        3.1059310658520665,
+        3.7324177561284198,
+        4.020159664032724,
+        4.208863015664693,
+        4.384648195378833,
+        4.616406817914079,
+        5.2281201985285986
+      ],
+      "counts": [
+        21640,
+        21659,
+        21682,
+        21669,
+        21655,
+        21667,
+        21662,
+        21667,
+        21665,
+        21663
+      ]
+    },
+    "transactions_10m": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "transactions_1h": {
+      "inner_edges": [
+        0.0,
+        1.0
+      ],
+      "counts": [
+        0,
+        165489,
+        51140
+      ]
+    },
+    "mean_amount_30d": {
+      "inner_edges": [
+        49.584324414715724,
+        55.47497590361446,
+        59.06333333333333,
+        63.990458874458874,
+        71.9663768115942,
+        83.796,
+        101.23506218487395,
+        114.73800483091787,
+        131.79419586126494
+      ],
+      "counts": [
+        21663,
+        21663,
+        21662,
+        21664,
+        21662,
+        21662,
+        21664,
+        21663,
+        21663,
+        21663
+      ]
+    },
+    "amount_to_mean_30d": {
+      "inner_edges": [
+        0.05586820050252449,
+        0.11886614781741467,
+        0.25886201015672644,
+        0.469512350126963,
+        0.6745759696358675,
+        0.8973020285816721,
+        1.127392125782752,
+        1.4360646336826461,
+        1.9273927407384654
+      ],
+      "counts": [
+        21663,
+        21663,
+        21663,
+        21663,
+        21662,
+        21663,
+        21663,
+        21663,
+        21663,
+        21663
+      ]
+    },
+    "new_merchant_30d": {
+      "inner_edges": [
+        0.0,
+        1.0
+      ],
+      "counts": [
+        0,
+        74650,
+        141979
+      ]
+    },
+    "history_count_30d": {
+      "inner_edges": [
+        22.0,
+        37.0,
+        52.0,
+        64.0,
+        76.0,
+        88.0,
+        101.0,
+        120.0,
+        141.0
+      ],
+      "counts": [
+        21251,
+        21833,
+        21603,
+        21527,
+        21514,
+        20650,
+        22079,
+        22025,
+        21983,
+        22164
+      ]
+    },
+    "cold_start": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "hour_sin": {
+      "inner_edges": [
+        -0.867584691176629,
+        -0.5001889255331572,
+        -0.052408578493611975,
+        0.1993679344171972,
+        0.41403139054927396,
+        0.6078956527491957,
+        0.770883950604531,
+        0.8951613845816977,
+        0.9736618692311613
+      ],
+      "counts": [
+        21663,
+        21661,
+        21665,
+        21659,
+        21662,
+        21667,
+        21662,
+        21663,
+        21662,
+        21665
+      ]
+    },
+    "hour_cos": {
+      "inner_edges": [
+        -0.9492426435730339,
+        -0.8042632855544232,
+        -0.5777151723353643,
+        -0.2938317965478697,
+        0.019633692460628474,
+        0.334834922784849,
+        0.6139408387503665,
+        0.8294440098560505,
+        0.957655153186909
+      ],
+      "counts": [
+        21662,
+        21664,
+        21663,
+        21663,
+        21662,
+        21663,
+        21662,
+        21663,
+        21662,
+        21665
+      ]
+    },
+    "home_distance_km": {
+      "inner_edges": [
+        35.38115121000609,
+        49.79663285286414,
+        60.970346594512414,
+        70.3225183582611,
+        78.57968305039267,
+        86.41044714640529,
+        94.51196048195266,
+        103.46655903686086,
+        113.24192568800424
+      ],
+      "counts": [
+        21663,
+        21663,
+        21663,
+        21663,
+        21662,
+        21663,
+        21663,
+        21663,
+        21663,
+        21663
+      ]
+    },
+    "home_missing": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_unknown": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_entertainment": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_food_dining": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_gas_transport": {
+      "inner_edges": [
+        0.0,
+        1.0
+      ],
+      "counts": [
+        0,
+        181365,
+        35264
+      ]
+    },
+    "category_grocery_net": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_grocery_pos": {
+      "inner_edges": [
+        0.0,
+        1.0
+      ],
+      "counts": [
+        0,
+        176897,
+        39732
+      ]
+    },
+    "category_health_fitness": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_home": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_kids_pets": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_misc_net": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_misc_pos": {
+      "inner_edges": [
+        0.0,
+        1.0
+      ],
+      "counts": [
+        0,
+        189742,
+        26887
+      ]
+    },
+    "category_personal_care": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "category_shopping_net": {
+      "inner_edges": [
+        0.0,
+        1.0
+      ],
+      "counts": [
+        0,
+        186007,
+        30622
+      ]
+    },
+    "category_shopping_pos": {
+      "inner_edges": [
+        0.0,
+        1.0
+      ],
+      "counts": [
+        0,
+        177241,
+        39388
+      ]
+    },
+    "category_travel": {
+      "inner_edges": [
+        0.0
+      ],
+      "counts": [
+        0,
+        216629
+      ]
+    },
+    "merchant_fraud_rate": {
+      "inner_edges": [
+        0.0017937219730941704,
+        0.004878048780487805,
+        0.01,
+        0.018487394957983194,
+        0.025363825363825362,
+        0.03417226890756294,
+        0.046564885496183206,
+        0.06666666666666667,
+        0.12000000000000001
+      ],
+      "counts": [
+        21647,
+        21478,
+        19115,
+        24398,
+        21671,
+        21668,
+        21661,
+        21477,
+        21796,
+        21718
+      ]
+    },
+    "merchant_label_count": {
+      "inner_edges": [
+        19.0,
+        64.0,
+        109.0,
+        167.0,
+        239.0,
+        296.0,
+        360.0,
+        466.0,
+        576.0
+      ],
+      "counts": [
+        21347,
+        21691,
+        21928,
+        21408,
+        21673,
+        21760,
+        21648,
+        21734,
+        21616,
+        21824
+      ]
+    }
+  },
+  "training_asof": 1717506648
+}

@@ -1,5 +1,7 @@
 # External Sparkov experiment
 
+This is the original small-study record. The current 523,605-transaction study, ablations, calibration and uncertainty are in [ML evidence](ML_EVIDENCE.md).
+
 Source: [Sparkov Data Generation](https://github.com/namebrandon/Sparkov_Data_Generation), MIT-licensed revision `b5eb45c89d36f2aa4ef16044a42945bed8b96d93`. This uses that external project's original behavioral profiles, not FraudGuard's internal compromise generator. Sparkov remains synthetic and rule-driven; it does not solve the absence of real-bank validation.
 
 The completed run generated **42,925 transactions for 100 accounts**, January–July 2024, with a **2.227% fraud rate**. We ran sequentially with seed 42, Faker 13.12.0 and NumPy 2.3.3, froze the customer date to 2024-01-01, normalized transaction wall-clock timestamps to UTC and simulated a fixed two-day label delay. No labels or account IDs become model features. Personal-looking generated columns are discarded; account and merchant identifiers become deterministic tokens. This normalizer is for synthetic Sparkov exports, not a production de-identification service.

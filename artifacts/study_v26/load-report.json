@@ -1,0 +1,49 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.14",
+  "model": "behavioral-6d94fa3d42458af3-persisted",
+  "scope": "Direct production ingest transaction, local Windows disk, no HTTP/TLS/auth/quotas, no shadow model; 100 events per writer at every concurrency, identical growing history distribution. Not EC2 capacity or a universal throughput ceiling.",
+  "results": [
+    {
+      "concurrency": 1,
+      "successful": 100,
+      "errors": [],
+      "seconds": 2.9558034000219777,
+      "transactions_per_second": 33.831749432068605,
+      "p50_ms": 28.960399969946593,
+      "p95_ms": 32.93813003692776,
+      "retained_predictions": 100
+    },
+    {
+      "concurrency": 2,
+      "successful": 200,
+      "errors": [],
+      "seconds": 6.022269700071774,
+      "transactions_per_second": 33.21007028257409,
+      "p50_ms": 58.807199995499104,
+      "p95_ms": 89.60768997785631,
+      "retained_predictions": 200
+    },
+    {
+      "concurrency": 4,
+      "successful": 400,
+      "errors": [],
+      "seconds": 9.695092299953103,
+      "transactions_per_second": 41.257987817396526,
+      "p50_ms": 63.70499997865409,
+      "p95_ms": 257.88317000842653,
+      "retained_predictions": 400
+    },
+    {
+      "concurrency": 8,
+      "successful": 800,
+      "errors": [],
+      "seconds": 14.494942000019364,
+      "transactions_per_second": 55.191666168718115,
+      "p50_ms": 63.98460001219064,
+      "p95_ms": 297.534664958948,
+      "retained_predictions": 800
+    }
+  ],
+  "max_observed_transactions_per_second": 55.191666168718115
+}

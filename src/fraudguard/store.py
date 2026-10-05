@@ -45,7 +45,15 @@ CREATE TABLE IF NOT EXISTS behavioral_accounts(owner TEXT NOT NULL,account TEXT 
 CREATE TABLE IF NOT EXISTS behavioral_events(owner TEXT NOT NULL,event_id TEXT NOT NULL,account TEXT NOT NULL,
  timestamp INTEGER NOT NULL,raw TEXT NOT NULL,response TEXT NOT NULL,prediction_id TEXT NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,PRIMARY KEY(owner,event_id));
 CREATE INDEX IF NOT EXISTS behavioral_account_time ON behavioral_events(owner,account,timestamp,event_id);
-PRAGMA user_version=4;
+CREATE TABLE IF NOT EXISTS account_events(event_id TEXT PRIMARY KEY,account TEXT NOT NULL,timestamp INTEGER NOT NULL,submitted_by TEXT NOT NULL,raw TEXT NOT NULL,response TEXT NOT NULL,prediction_id TEXT REFERENCES predictions(id) ON DELETE SET NULL,received_at REAL NOT NULL);
+CREATE INDEX IF NOT EXISTS account_event_time ON account_events(account,timestamp,event_id);
+CREATE TABLE IF NOT EXISTS account_watermarks(account TEXT PRIMARY KEY,timestamp INTEGER NOT NULL,event_id TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS label_history(id INTEGER PRIMARY KEY AUTOINCREMENT,prediction_id TEXT NOT NULL,merchant TEXT NOT NULL,event_timestamp INTEGER NOT NULL,fraud INTEGER NOT NULL,available_at REAL NOT NULL);
+CREATE INDEX IF NOT EXISTS merchant_label_time ON label_history(merchant,available_at);
+CREATE INDEX IF NOT EXISTS prediction_label_time ON label_history(prediction_id,available_at,id);
+CREATE TABLE IF NOT EXISTS behavioral_candidates(version TEXT PRIMARY KEY REFERENCES behavioral_models(version),submitted_by TEXT NOT NULL,submitted_at REAL NOT NULL,status TEXT NOT NULL,approved_by TEXT);
+CREATE TABLE IF NOT EXISTS shadow_scores(prediction_id TEXT NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,version TEXT NOT NULL REFERENCES behavioral_models(version),score REAL,threshold REAL,error TEXT,PRIMARY KEY(prediction_id,version));
+PRAGMA user_version=5;
 """
 
 
@@ -57,6 +65,9 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.executescript(SCHEMA)
+            from fraudguard.history import migrate
+
+            migrate(db)
 
     @contextmanager
     def connect(self):
@@ -146,9 +157,10 @@ class Store:
             raise ValueError("Retention must be at least 7 days")
         cutoff = time.time() - days * 86400
         with self.connect() as db:
-            if days < 30 and db.execute("SELECT 1 FROM behavioral_events LIMIT 1").fetchone():
+            if days < 30 and db.execute("SELECT 1 FROM account_events LIMIT 1").fetchone():
                 raise ValueError("Behavioral history requires at least 30 days of retention")
             deleted = db.execute("DELETE FROM predictions WHERE at<?", (cutoff,)).rowcount
+            db.execute("DELETE FROM account_events WHERE received_at<?", (cutoff,))
             db.execute("DELETE FROM bins WHERE hour<?", (int(cutoff // 3600),))
             db.execute("DELETE FROM sessions WHERE expires<?", (time.time(),))
             db.execute("DELETE FROM attempts WHERE started<?", (time.time() - 3600,))

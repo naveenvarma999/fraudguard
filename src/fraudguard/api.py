@@ -207,7 +207,7 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
 
     app = FastAPI(
         title="FraudGuard",
-        version="2.5.0",
+        version="2.6.0",
         lifespan=lifespan,
         description="Benchmark fraud risk scoring. Review decisions are recommendations.",
     )
@@ -313,9 +313,15 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
 
     @app.get("/v1/behavioral/model", dependencies=[Depends(authorize)])
     def behavioral_info():
+        from fraudguard.behavioral_lifecycle import active
+
         if app.state.behavioral is None:
             raise HTTPException(503, "Behavioral model is not configured")
-        return app.state.behavioral[1]
+        return (
+            active(app.state.store, app.state.behavioral)
+            if app.state.store
+            else app.state.behavioral
+        )[1]
 
     @app.post("/v1/behavioral/predict")
     def behavioral_predict(payload: BehavioralRequest, actor=Depends(authorize)):
@@ -337,6 +343,8 @@ def create_app(model_dir=None, api_key=None, state_dir=None):
                 result = behavioral_ingest(
                     app.state.store, app.state.behavioral, actor["name"], payload
                 )
+                if result.get("status") == "stored_late":
+                    return JSONResponse(result, status_code=202)
                 behavioral_predictions.labels(result["decision"]).inc()
                 return result
             except ValueError as exc:

@@ -52,9 +52,9 @@ async function detail(identifier, older = false) {
     $('review-summary').textContent = `Scored ${date(row.at)} · ${row.owner} · Model ${row.model}. Prediction ID: ${row.id}`;
     $('review-disposition').value = row.review; $('review-note').value = row.note;
     $('label-source').value = result.label?.source || ''; $('label-fraud').value = String(result.label?.fraud ?? 1);
-    cards($('detail-metrics'), [[result.behavioral ? 'Uncalibrated risk score' : 'Fraud probability', pct(row.probability), `Review threshold ${pct(row.threshold)}`], ['Recommendation', row.decision === 'review' ? 'Review' : 'Pass', 'A recommendation, not a verified outcome'], ['Amount', row.amount.toLocaleString(), 'Currency is not provided by this dataset'], ['Verified outcome', result.label ? result.label.fraud ? 'Fraud' : 'Not fraud' : 'Not recorded', result.label ? `Recorded by ${result.label.actor}` : 'Requires evidence, such as a confirmed chargeback']]);
+    cards($('detail-metrics'), [[result.behavioral ? (result.behavioral.score_kind === 'uncalibrated' ? 'Uncalibrated risk score' : 'Calibrated fraud probability') : 'Fraud probability', pct(row.probability), `Review threshold ${pct(row.threshold)}`], ['Recommendation', row.decision === 'review' ? 'Review' : 'Pass', 'A recommendation, not a verified outcome'], ['Amount', row.amount.toLocaleString(), 'Currency is not provided by this dataset'], ['Verified outcome', result.label ? result.label.fraud ? 'Fraud' : 'Not fraud' : 'Not recorded', result.label ? `Recorded by ${result.label.actor}` : 'Requires evidence, such as a confirmed chargeback']]);
     $('behavioral-context').replaceChildren();
-    if (result.behavioral) { const b = result.behavioral; $('behavioral-context').append(node('h3','Behavioral evidence'), node('p', b.context.join('. ')), node('p', b.decision_reason === 'cold_start_manual_review' ? 'Manual review: no prior account history. This policy overrides the score threshold.' : 'Recommendation based on the model threshold.')); const details = node('details'); details.append(node('summary','Inspect saved features'),node('pre',JSON.stringify(b.features,null,2))); $('behavioral-context').append(details); }
+    if (result.behavioral) { const b = result.behavioral; $('behavioral-context').append(node('h3','Behavioral evidence'), node('p', b.context.join('. ')), node('p', b.decision_reason === 'cold_start_manual_review' ? 'Manual review: no prior account history. This policy overrides the score threshold.' : b.decision_reason === 'missing_context_manual_review' ? 'Manual review: category or home location is missing. This policy overrides the score threshold.' : 'Recommendation based on the model threshold.')); const details = node('details'); details.append(node('summary','Inspect saved features'),node('pre',JSON.stringify(b.features,null,2))); $('behavioral-context').append(details); }
     $('detail-next').textContent = row.review === 'open' ? (row.decision === 'review' ? 'Investigate this flagged transaction. Record your review and reasoning below.' : 'No review was recommended. You can still investigate and record evidence if needed.') : 'A review has been recorded. Add a verified outcome when evidence arrives, or document a correction.';
   }
   $('detail-timeline').replaceChildren();
@@ -107,6 +107,12 @@ async function monitoring() {
 }
 async function releases() {
   const data = await api('/ops/releases'), root = $('release-list'); root.replaceChildren(); root.append(node('p', `Active: ${data.active}`));
+  const candidates = await api('/ops/behavioral/releases');
+  const behavioral = node('article',undefined,'panel ops-card'); behavioral.append(node('h2','Behavioral shadow candidates'),node('p','Candidates run beside the live model. Promotion needs paired outcome evidence and a different administrator.'));
+  for (const candidate of candidates) { const card=node('div'); card.append(node('h3',candidate.version),node('p',`${candidate.status} · ${candidate.evidence.paired} shadow scores · ${candidate.evidence.labeled} verified outcomes`)); const details=node('details'); details.append(node('summary','Comparison evidence'),node('pre',JSON.stringify(candidate.evidence,null,2))); card.append(details);
+    if (candidate.status==='pending') { card.append(button('Start shadow',async()=>{await api(`/ops/behavioral/releases/${candidate.version}/shadow`,'POST');notice('Shadow scoring enabled.');await releases();})); const approve=button('Promote candidate',async()=>{if(!confirm('Promote this candidate for new behavioral predictions?'))return;await api(`/ops/behavioral/releases/${candidate.version}/promote`,'POST');await releases();});approve.disabled=!candidate.evidence.promotable||candidate.submitted_by===state.user.name;card.append(approve); } behavioral.append(card);
+  }
+  behavioral.append(button('Roll back behavioral model',async()=>{if(!confirm('Restore the previous behavioral model?'))return;await api('/ops/behavioral/rollback','POST');await releases();}));root.append(behavioral);
   for (const r of data.releases) { const card = node('article', undefined, 'ops-card'); card.append(node('h3', r.id), node('p', `${r.status} · Submitted by ${r.submitted_by} · Approved by ${r.approved_by || '—'}`));
     const details = node('details'); details.append(node('summary', 'Quality gates'), node('pre', JSON.stringify(r.gates, null, 2))); card.append(details);
     if (r.status === 'pending') { const b = button('Approve release', async () => { await api(`/ops/releases/${r.id}/approve`, 'POST'); await releases(); notice('Release approved. It can now be activated.'); }); b.disabled = r.submitted_by === state.user.name; card.append(b); if (b.disabled) card.append(node('p', 'Another administrator must approve your submission.')); }
@@ -192,12 +198,12 @@ async function overview() {
   if (!d.recent.length) $('overview-recent').append(node('p','Start by downloading the sample CSV and uploading your first batch from Transactions & upload.','onboarding-note'));
 }
 const stages = [
-  ['Upload','Start with valid transaction features','Upload CSV or JSON containing Amount and V1–V28. The browser checks the format before sending up to 100 transactions. A card number or ordinary bank statement is not enough.'],
+  ['Submit','Send one account transaction','Submit an event ID, account and merchant tokens, event time, amount and context. The server retrieves the organisation’s saved account history. The ULB upload remains a separate baseline.'],
   ['Protect','Authenticate and control traffic','The API checks the named-user session or service key, validates the input, and applies request and transaction quotas. Excess requests receive retry guidance.'],
-  ['Score','Select a scoring worker','The coordinator uses a least-busy worker when the worker pool is enabled. A failed worker is temporarily excluded; local deployments can score inside the API.'],
-  ['Model','Use one approved model version','The batch keeps one model version and decision threshold throughout scoring, even if an administrator activates another version. A risk score is a recommendation.'],
+  ['Score','Build features from available history','One database transaction reads prior account events and labels that had already arrived. Late events are retained without scoring. Optional workers apply to the ULB baseline.'],
+  ['Model','Score with the live model','The live model returns a risk estimate. A shadow candidate can score the same event without changing the response. New accounts are sent for manual review.'],
   ['Review','Save predictions for human review','The coordinator saves scores and an audit event. Analysts investigate their submissions; administrators can review all retained records.'],
-  ['Learn','Record evidence and monitor quality','Verified outcomes are separate from review decisions. Delayed fraud labels support performance checks; distribution monitoring helps detect changing inputs. Retraining is not automatic.']
+  ['Learn','Retrain, compare and approve','Verified outcomes support drift and quality checks. An operator retrains on arrived labels, compares a shadow candidate with the live model, and a different administrator approves promotion after the evidence gates pass.']
 ];
 async function flow() {
   if (!state.overview) state.overview = await api('/ops/overview');
@@ -223,6 +229,10 @@ window.addEventListener('hashchange', action(async () => {
 
 $('behavioral-form').onsubmit = action(async () => {
   const transaction = {event_id: $('behavioral-event').value.trim(), account_id: $('behavioral-account').value.trim(), merchant_id: $('behavioral-merchant').value.trim(), timestamp: Math.floor(Date.parse($('behavioral-time').value + 'Z')/1000), amount: Number($('behavioral-amount').value), latitude: Number($('behavioral-lat').value), longitude: Number($('behavioral-lon').value)};
+  transaction.category = $('behavioral-category').value;
+  transaction.home_latitude = Number($('behavioral-home-lat').value);
+  transaction.home_longitude = Number($('behavioral-home-lon').value);
   const result = await api('/v1/behavioral/predict','POST',{transaction});
+  if (result.status === 'stored_late') { notice('Late event saved for future history. No new score was issued.'); return; }
   await openReview({id: result.prediction_id});
 });

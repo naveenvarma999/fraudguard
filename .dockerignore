@@ -11,6 +11,7 @@ __pycache__
 artifacts/*
 !artifacts/benchmark
 !artifacts/behavioral_service
+!artifacts/behavioral_candidate
 
 state/
 *.sqlite3*

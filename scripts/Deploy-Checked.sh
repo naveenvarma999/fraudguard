@@ -37,7 +37,7 @@ rollback() {
 trap rollback ERR
 "${base[@]}" build api
 "${base[@]}" up -d --no-build --wait --wait-timeout 240
-"${base[@]}" exec -T api python -m fraudguard.deployment --expected-version 2.5.0 --require-backup --attempts 8 --interval 15
+"${base[@]}" exec -T api python -m fraudguard.deployment --expected-version 2.6.0 --require-backup --attempts 8 --interval 15
 "${base[@]}" exec -T monitor python -m fraudguard.backups check-latest
 if [[ -f .workers-enabled ]]; then "${base[@]}" exec -T api python -m fraudguard.check_workers; fi
 trap - ERR

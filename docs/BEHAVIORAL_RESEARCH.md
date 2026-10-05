@@ -1,5 +1,7 @@
 # Behavioral fraud experiment
 
+This is a historical internal-simulator record. Current serving semantics are in [Behavioral API](BEHAVIORAL_API.md), and the larger external-generator study is in [ML evidence](ML_EVIDENCE.md).
+
 This document describes the internal synthetic timing experiment. v2.4 also includes [external Sparkov training](SPARKOV.md) and a separate [behavioral API](BEHAVIORAL_API.md). The original `/v1/predict` route continues to use ULB features.
 
 ## Reproduce
